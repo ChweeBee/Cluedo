@@ -15,6 +15,8 @@ public class UnitController : MonoBehaviour
     GridManager gridManager;
     Pathfinding pathFinder;
 
+    public Animator animator;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -75,6 +77,9 @@ public class UnitController : MonoBehaviour
 
     IEnumerator FollowPath()
     {
+        // turn on walking animation
+        animator.SetBool("isWalking", true);
+
         for (int i = 1; i < path.Count; i++)
         {
             Vector3 startPosition = selectedUnit.position;
@@ -85,10 +90,20 @@ public class UnitController : MonoBehaviour
 
             while (travelPercent < 1f)
             {
+                Quaternion targetRotation = Quaternion.LookRotation(endPosition - startPosition);
+                selectedUnit.rotation = Quaternion.Slerp(selectedUnit.rotation, targetRotation, Time.deltaTime * 10f);
+
                 travelPercent += Time.deltaTime * movementSpeed;
+
+                // Clamp to avoid overshooting
+                travelPercent = Mathf.Clamp01(travelPercent);
+
                 selectedUnit.position = Vector3.Lerp(startPosition, endPosition, travelPercent);
                 yield return new WaitForEndOfFrame();
             }
         }
+
+        // turn off walking animation
+        animator.SetBool("isWalking", false);
     }
 }
