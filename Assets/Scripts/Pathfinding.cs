@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Pathfinding : MonoBehaviour
 {
+    
     [SerializeField] Vector2Int startCords;
     [SerializeField] Vector2Int targetCords;
 
@@ -128,12 +129,22 @@ public class Pathfinding : MonoBehaviour
         BroadcastMessage("RecalculatePath", false, SendMessageOptions.DontRequireReceiver);
     }
 
-    public void SetNewDestination(Vector2Int startCoordinates, Vector2Int targetCoordinates)
+public void SetNewDestination(Vector2Int startCoordinates, Vector2Int targetCoordinates)
+{
+    startCords = startCoordinates;
+    targetCords = targetCoordinates;
+    if (!grid.ContainsKey(startCords))
     {
-        startCords = startCoordinates;
-        targetCords = targetCoordinates;
-        startNode = grid[this.startCords];
-        targetNode = grid[this.TargetCords];
-        GetNewPath();
+        Debug.LogError("Start coordinate not found in grid: " + startCords);
+        return;
     }
+    if (!grid.ContainsKey(targetCords))
+    {
+        Debug.LogError("Target coordinate not found in grid: " + targetCords);
+        return;
+    }
+    startNode = grid[startCords];
+    targetNode = grid[targetCords];
+    GetNewPath();
+}
 }
