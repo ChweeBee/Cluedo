@@ -10,24 +10,24 @@ public class DiceRoller : MonoBehaviour
     private float timer = 0f;
     public float launchForce = 7f;
 
+void DetermineFinishedSide()
+{
+    float closestDot = -1f;
+    string resultLabel = "Unknown";
 
-    void DetermineFinishedSide()
-    {
-        float closestDot = -1f;
-        string resultLabel = "Unknown";
+    CheckDirection(transform.up, "2", ref closestDot, ref resultLabel);
+    CheckDirection(-transform.up, "5", ref closestDot, ref resultLabel);
+    CheckDirection(transform.right, "4", ref closestDot, ref resultLabel);
+    CheckDirection(-transform.right, "3", ref closestDot, ref resultLabel);
+    CheckDirection(transform.forward, "1", ref closestDot, ref resultLabel);
+    CheckDirection(-transform.forward, "6", ref closestDot, ref resultLabel);
 
-        // Checking all directions
-        CheckDirection(transform.up, "2", ref closestDot, ref resultLabel);
-        CheckDirection(-transform.up, "5", ref closestDot, ref resultLabel);
-        CheckDirection(transform.right, "4", ref closestDot, ref resultLabel);
-        CheckDirection(-transform.right, "3", ref closestDot, ref resultLabel);
-        CheckDirection(transform.forward, "1", ref closestDot, ref resultLabel);
-        CheckDirection(-transform.forward, "6", ref closestDot, ref resultLabel);
+    int dice1 = int.Parse(resultLabel);
+    int dice2 = Random.Range(1, 7);
 
-        // Convert the string result to an actual number
-        finalResult = int.Parse(resultLabel);
-        Debug.Log("You rolled a: " + finalResult);
-    }
+    finalResult = dice1 + dice2;
+    Debug.Log("You rolled: " + dice1 + " + " + dice2 + " = " + finalResult);
+}
 
     void Start()
     {
@@ -66,6 +66,7 @@ public class DiceRoller : MonoBehaviour
     //main method that deals with rolling
     void StartRoll()
     {
+        finalResult = 0;
         isRolling = true;
         timer = 0f;
 
@@ -90,5 +91,11 @@ public class DiceRoller : MonoBehaviour
             closestDot = dot;
             resultLabel = label;
         }
+    }
+
+    // 
+    public bool HasFinishedRolling()
+    {
+    return !isRolling && finalResult > 0;
     }
 }
