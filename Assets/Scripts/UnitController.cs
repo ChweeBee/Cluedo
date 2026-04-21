@@ -14,7 +14,8 @@ public class UnitController : MonoBehaviour
 
     GridManager gridManager;
     Pathfinding pathFinder;
-    DiceRoller diceRoller;
+    DiceManager diceManager;
+    RoomManager roomManager;
 
     public Animator animator;
 
@@ -23,9 +24,10 @@ public class UnitController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        roomManager = FindAnyObjectByType<RoomManager>();
         gridManager = FindAnyObjectByType<GridManager>();
         pathFinder = FindAnyObjectByType<Pathfinding>();
-        diceRoller = FindAnyObjectByType<DiceRoller>();
+        diceManager = FindAnyObjectByType<DiceManager>();   
     }
 
     // Update is called once per frame
@@ -49,7 +51,7 @@ public class UnitController : MonoBehaviour
                 {
                     if (unitSelected)
                     {
-                        if(diceRoller.finalResult <= 0)
+                        if(diceManager.totalResult <= 0)
                         {
                             Debug.Log("Roll the dice first");
                             return;
@@ -66,7 +68,7 @@ public class UnitController : MonoBehaviour
                         }
                         int stepsRequired = newPath.Count - 1;
 
-                        if(stepsRequired > diceRoller.finalResult)
+                        if(stepsRequired > diceManager.totalResult)
                         {
                             Debug.Log("Destination greater than dice roll");
                             return;
@@ -76,7 +78,7 @@ public class UnitController : MonoBehaviour
                         path = newPath;
                         StartCoroutine(FollowPath());
 
-                        diceRoller.finalResult = 0;
+                        diceManager.totalResult = 0;
                     }
                 }
 
@@ -135,7 +137,13 @@ public class UnitController : MonoBehaviour
             }
         }
 
+
+        // Check room entry/exit
+        Vector2Int finalCords = path[path.Count - 1].cords;
+        roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+
         // turn off walking animation
         animator.SetBool("isWalking", false);
+        
     }
 }
