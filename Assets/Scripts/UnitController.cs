@@ -145,7 +145,10 @@ public class UnitController : MonoBehaviour
 
         // Check room entry/exit
         Vector2Int finalCords = path[path.Count - 1].cords;
-        roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+        if (roomManager != null)
+        {
+            roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+        }
 
         // turn off walking animation
         animator.SetBool("isWalking", false);
