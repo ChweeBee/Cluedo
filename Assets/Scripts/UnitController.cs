@@ -145,6 +145,8 @@ public class UnitController : MonoBehaviour
 
         // Check room entry/exit
         Vector2Int finalCords = path[path.Count - 1].cords;
+        
+        // TODO: fix properly
         if (roomManager != null)
         {
             roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
