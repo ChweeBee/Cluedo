@@ -37,8 +37,6 @@ public class UnitController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
 
-                
-
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -86,13 +84,9 @@ public class UnitController : MonoBehaviour
                         diceManager.totalResult = 0;
                     }
                 }
-
-
             }
         }
     }
-
-
 /*
     void RecalculatePath(bool resetPath)
     {
