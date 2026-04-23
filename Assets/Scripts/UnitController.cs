@@ -33,8 +33,12 @@ public class UnitController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
         if (Input.GetMouseButtonDown(0))
         {
+
+                
+
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -64,6 +68,7 @@ public class UnitController : MonoBehaviour
                         if (newPath == null || newPath.Count == 0)
                         {
                             Debug.Log("No valid path.");
+                            Debug.Log("No valid path. totalResult is: " + diceManager.totalResult);
                             return;
                         }
                         int stepsRequired = newPath.Count - 1;

@@ -55,8 +55,6 @@ public class Pathfinding : MonoBehaviour
 
     void BreadthFirstSearch(Vector2Int coordinates)
     {
-        startNode.walkable = true;
-        targetNode.walkable = true;
 
         frontier.Clear();
         reached.Clear();
@@ -75,7 +73,6 @@ public class Pathfinding : MonoBehaviour
             if (currentNode.cords == targetCords)
             {
                 isRunning = false;
-                currentNode.walkable = false;
             }
         }
     }

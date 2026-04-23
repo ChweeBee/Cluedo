@@ -58,6 +58,7 @@ public class Room : MonoBehaviour
 
 
 
+// scene assistance for rooms
 private void OnDrawGizmos()
 {
     Gizmos.color = Color.red;
@@ -74,7 +75,7 @@ private void OnDrawGizmos()
         );
         Gizmos.DrawCube(worldPos, Vector3.one);
     }
-    
+
     Gizmos.color = Color.blue;
     foreach (Vector2Int cord in doorTiles)
     {
