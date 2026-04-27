@@ -202539,7 +202539,7 @@ MonoBehaviour:
   defaultBehaviour: {fileID: 0}
   idleBehaviour: {fileID: 0}
   moveBehaviour: {fileID: 0}
-  idleAfterSeconds: 15
+  idleAfterSeconds: 5
 --- !u!114 &1648600933
 MonoBehaviour:
   m_ObjectHideFlags: 0
