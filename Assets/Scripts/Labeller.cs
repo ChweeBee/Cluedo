@@ -11,10 +11,8 @@ public class Labeller : MonoBehaviour
     public Vector2Int cords = new Vector2Int();
     GridManager gridManager;
 
-    [SerializeField] Color defaultColour = Color.white;
-    [SerializeField] Color blockedColour = Color.red;
-    [SerializeField] Color exploredColour = Color.yellow;
-    [SerializeField] Color pathColour = new Color(1f, 0.5f, 0f);
+    static bool labelsHidden = false;
+    static int lastToggleFrame = -1;
 
     private void Awake()
     {
@@ -35,32 +33,8 @@ public class Labeller : MonoBehaviour
         transform.name = cords.ToString();
 
         ToggleLabels();
-        SetLabelColour();
-    }
-    void SetLabelColour()
-    {
-        if (gridManager == null) { return; }
 
-        Node node = gridManager.GetNode(cords);
-
-        if (node == null) { return; }
-
-        if (!node.walkable)
-        {
-            label.color = blockedColour;
-        }
-        else if (node.path)
-        {
-            label.color = pathColour;
-        }
-        else if (node.explored)
-        {
-            label.color = exploredColour;
-        }
-        else
-        {
-            label.color = defaultColour;
-        }
+        if (Application.isPlaying) label.enabled = !labelsHidden;
     }
 
     private void DisplayCords()
@@ -75,9 +49,10 @@ public class Labeller : MonoBehaviour
 
     void ToggleLabels()
     {
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C) && lastToggleFrame != Time.frameCount)
         {
-            label.enabled = !label.IsActive();
+            labelsHidden = !labelsHidden;
+            lastToggleFrame = Time.frameCount;
         }
     }
 }
