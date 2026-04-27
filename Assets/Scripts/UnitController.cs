@@ -5,7 +5,7 @@ using System.Collections;
 
 public class UnitController : MonoBehaviour
 {
-    [SerializeField] float movementSpeed = 1f;
+    [SerializeField] float movementSpeed = 3f;
 
     Transform selectedUnit;
     bool unitSelected = false;
@@ -14,21 +14,29 @@ public class UnitController : MonoBehaviour
 
     GridManager gridManager;
     Pathfinding pathFinder;
+    DiceManager diceManager;
+    RoomManager roomManager;
 
     public Animator animator;
+
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        roomManager = FindAnyObjectByType<RoomManager>();
         gridManager = FindAnyObjectByType<GridManager>();
         pathFinder = FindAnyObjectByType<Pathfinding>();
+        diceManager = FindAnyObjectByType<DiceManager>();   
     }
 
     // Update is called once per frame
     void Update()
     {
+        
         if (Input.GetMouseButtonDown(0))
         {
+
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -36,26 +44,50 @@ public class UnitController : MonoBehaviour
 
             if (hasHit)
             {
-                if (hit.transform.tag == "Tile")
-                {
-                    if (unitSelected)
-                    {
-                        Vector2Int targetCords = hit.transform.GetComponent<Tile>().cords;
-                        Vector2Int startCords = new Vector2Int((int) selectedUnit.transform.position.x, (int) selectedUnit.transform.position.z) / gridManager.UnityGridSize;
-                        pathFinder.SetNewDestination(startCords, targetCords);
-                        RecalculatePath(true);
-                    }
-                }
-
                 if (hit.transform.tag == "Unit")
                 {
                     selectedUnit = hit.transform;
                     unitSelected = true;
                 }
+                if (hit.transform.tag == "Tile")
+                {
+                    if (unitSelected)
+                    {
+                        if(diceManager.totalResult <= 0)
+                        {
+                            Debug.Log("Roll the dice first");
+                            return;
+                        }
+                        Vector2Int targetCords = hit.transform.GetComponent<Tile>().cords;
+                        Vector2Int startCords = new Vector2Int((int) selectedUnit.transform.position.x, (int) selectedUnit.transform.position.z) / gridManager.UnityGridSize;
+                        pathFinder.SetNewDestination(startCords, targetCords);
+                        List<Node> newPath = pathFinder.GetNewPath(startCords);
+                        
+                        if (newPath == null || newPath.Count == 0)
+                        {
+                            Debug.Log("No valid path.");
+                            Debug.Log("No valid path. totalResult is: " + diceManager.totalResult);
+                            return;
+                        }
+                        int stepsRequired = newPath.Count - 1;
+
+                        if(stepsRequired > diceManager.totalResult)
+                        {
+                            Debug.Log("Destination greater than dice roll");
+                            return;
+                        }
+                        StopAllCoroutines();
+                        path.Clear();
+                        path = newPath;
+                        StartCoroutine(FollowPath());
+
+                        diceManager.totalResult = 0;
+                    }
+                }
             }
         }
     }
-
+/*
     void RecalculatePath(bool resetPath)
     {
         Vector2Int coordinates = new Vector2Int();
@@ -74,6 +106,7 @@ public class UnitController : MonoBehaviour
         path = pathFinder.GetNewPath(coordinates);
         StartCoroutine(FollowPath());
     }
+    */
 
     IEnumerator FollowPath()
     {
@@ -103,7 +136,18 @@ public class UnitController : MonoBehaviour
             }
         }
 
+
+        // Check room entry/exit
+        Vector2Int finalCords = path[path.Count - 1].cords;
+        
+        // TODO: fix properly
+        if (roomManager != null)
+        {
+            roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+        }
+
         // turn off walking animation
         animator.SetBool("isWalking", false);
+        
     }
 }
