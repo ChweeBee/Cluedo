@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &1179262887038240612
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6217109962696255344, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_text
+      value: Rope
+      objectReference: {fileID: 0}
+    - target: {fileID: 7804646231357639452, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 8432179267392976387, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_Name
+      value: CardTemplate Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913077060867578954, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9219550642451714762, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: weapon
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9219550642451714762, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
+      propertyPath: cardName
+      value: Rope
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1038f7549f5488d478ea0e69e8a3365c, type: 3}
