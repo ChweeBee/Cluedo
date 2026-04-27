@@ -4,11 +4,23 @@ public class DiceRoller : MonoBehaviour
 {
     public int finalResult;
 
+
+    [SerializeField] private Vector3 startPosition;
+
     private Rigidbody rb;
     private bool isRolling = false;
     public float rollDelay = 0.5f;
     private float timer = 0f;
     public float launchForce = 7f;
+
+
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        startPosition = transform.position;
+        rb.isKinematic = true;
+    }
 
 
     void DetermineFinishedSide()
@@ -29,19 +41,8 @@ public class DiceRoller : MonoBehaviour
         Debug.Log("You rolled a: " + finalResult);
     }
 
-    void Start()
-    {
-        rb = GetComponent<Rigidbody>();
-    }
-
     void Update()
     {
-
-        //only allows roll if Space is pressed and dice isnt rolling
-        if (Input.GetKeyDown(KeyCode.Space) && !isRolling)
-        {
-            StartRoll();
-        }
 
         //if rolling count down the timer
         if (isRolling)
@@ -50,10 +51,13 @@ public class DiceRoller : MonoBehaviour
             //only check if stopped after delay
             if(timer > rollDelay)
             {
-                if(rb.linearVelocity.magnitude < 0.05f && rb.angularVelocity.magnitude < 0.05f)
+                if(rb.linearVelocity.magnitude < 0.2f && rb.angularVelocity.magnitude < 0.2f)
                 {
+                    rb.linearVelocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
                     isRolling = false;
                     Debug.Log("Dice landed");
+
 
                     DetermineFinishedSide();
                 }
@@ -64,13 +68,15 @@ public class DiceRoller : MonoBehaviour
 
 
     //main method that deals with rolling
-    void StartRoll()
+    public void StartRoll()
     {
+        rb.isKinematic = false;
         isRolling = true;
         timer = 0f;
+        finalResult = 0;
 
         //reset pos
-        transform.position = new Vector3(0, 2, 0);
+        transform.position = startPosition;
         transform.rotation = Random.rotation;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
@@ -90,5 +96,10 @@ public class DiceRoller : MonoBehaviour
             closestDot = dot;
             resultLabel = label;
         }
+    }
+
+    public bool HasFinishedRolling()
+    {
+        return !isRolling && finalResult > 0;
     }
 }
