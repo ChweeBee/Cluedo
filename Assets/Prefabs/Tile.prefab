@@ -69,10 +69,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cords: {x: 0, y: 0}
-  defaultColour: {r: 1, g: 1, b: 1, a: 1}
-  blockedColour: {r: 1, g: 0, b: 0, a: 1}
-  exploredColour: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  pathColour: {r: 1, g: 0.5, b: 0, a: 1}
 --- !u!114 &141337715116333831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -86,6 +82,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blocked: 0
+  reachableColor: {r: 0.4, g: 1, b: 0.4, a: 1}
+  pathColor: {r: 1, g: 0.7, b: 0.2, a: 1}
   cords: {x: 0, y: 0}
 --- !u!1 &2751148240815751190
 GameObject:
@@ -157,10 +155,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cords: {x: 0, y: 0}
-  defaultColour: {r: 1, g: 1, b: 1, a: 1}
-  blockedColour: {r: 1, g: 0, b: 0, a: 1}
-  exploredColour: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  pathColour: {r: 1, g: 0.5, b: 0, a: 1}
 --- !u!114 &6727525392904079275
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -174,6 +168,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blocked: 0
+  reachableColor: {r: 1, g: 0.71307427, b: 0.39999998, a: 1}
+  pathColor: {r: 1, g: 0.19999999, b: 0.2242443, a: 1}
   cords: {x: 0, y: 0}
 --- !u!1 &3776787472231742873
 GameObject:
@@ -350,7 +346,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7635052687065391442}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
   m_Name: 
