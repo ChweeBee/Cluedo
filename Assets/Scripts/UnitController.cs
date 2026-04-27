@@ -16,8 +16,7 @@ public class UnitController : MonoBehaviour
     Pathfinding pathFinder;
     DiceManager diceManager;
     RoomManager roomManager;
-
-    public Animator animator;
+    CameraController cameraController;
 
 
 
@@ -27,7 +26,8 @@ public class UnitController : MonoBehaviour
         roomManager = FindAnyObjectByType<RoomManager>();
         gridManager = FindAnyObjectByType<GridManager>();
         pathFinder = FindAnyObjectByType<Pathfinding>();
-        diceManager = FindAnyObjectByType<DiceManager>();   
+        diceManager = FindAnyObjectByType<DiceManager>();
+        cameraController = FindAnyObjectByType<CameraController>();
     }
 
     // Update is called once per frame
@@ -48,6 +48,7 @@ public class UnitController : MonoBehaviour
                 {
                     selectedUnit = hit.transform;
                     unitSelected = true;
+                    if (cameraController != null) cameraController.BeginMove(selectedUnit);
                 }
                 if (hit.transform.tag == "Tile")
                 {
@@ -110,8 +111,9 @@ public class UnitController : MonoBehaviour
 
     IEnumerator FollowPath()
     {
-        // turn on walking animation
-        animator.SetBool("isWalking", true);
+        // turn on walking animation on the selected unit only
+        Animator animator = selectedUnit.GetComponentInChildren<Animator>();
+        if (animator != null) animator.SetBool("isWalking", true);
 
         for (int i = 1; i < path.Count; i++)
         {
@@ -147,7 +149,12 @@ public class UnitController : MonoBehaviour
         }
 
         // turn off walking animation
-        animator.SetBool("isWalking", false);
-        
+        if (animator != null) animator.SetBool("isWalking", false);
+
+        yield return new WaitForSeconds(1f);
+
+        unitSelected = false;
+        selectedUnit = null;
+        if (cameraController != null) cameraController.SetMode(CameraController.CameraMode.Default);
     }
 }
