@@ -19,7 +19,7 @@ public class CameraController : MonoBehaviour
 
     [Header("Idle Activation")]
     [Tooltip("Seconds of no input before Default automatically switches to Idle.")]
-    [SerializeField] float idleAfterSeconds = 15f;
+    [SerializeField] float idleAfterSeconds = 5f;
 
     public CameraMode CurrentMode { get; private set; } = CameraMode.Disabled;
 
