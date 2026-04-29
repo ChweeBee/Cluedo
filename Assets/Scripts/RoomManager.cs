@@ -5,6 +5,26 @@ public class RoomManager : MonoBehaviour
 {
     [SerializeField] private List<Room> rooms;
 
+    private static readonly Dictionary<Room.RoomType, Room.RoomType> SecretPassages = new Dictionary<Room.RoomType, Room.RoomType>
+    {
+        { Room.RoomType.Kitchen, Room.RoomType.Study },
+        { Room.RoomType.Study, Room.RoomType.Kitchen },
+        { Room.RoomType.Lounge, Room.RoomType.Conservatory },
+        { Room.RoomType.Conservatory, Room.RoomType.Lounge }
+    };
+
+    public bool HasSecretPassage(Room source)
+    {
+        return source != null && SecretPassages.ContainsKey(source.roomType);
+    }
+
+    public Room GetSecretPassageTarget(Room source)
+    {
+        if (source == null) return null;
+        if (!SecretPassages.TryGetValue(source.roomType, out Room.RoomType targetType)) return null;
+        return GetRoom(targetType);
+    }
+
     public Room GetRoom(Room.RoomType type)
     {
         return rooms.Find(r => r.roomType == type);

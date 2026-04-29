@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CardManager cardManager;
     [SerializeField] private CardDealer cardDealer;
     [SerializeField] private Envelope envelope;
+    [SerializeField] private GridManager gridManager;
 
     [Header("UI")]
     [SerializeField] private TMP_Text turnText;
@@ -46,6 +47,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TMP_Text gameOverText;
     [SerializeField] private Button showEnvelopeButton;
+    [SerializeField] private Button secretPassageButton;
 
     private readonly HashSet<string> eliminatedPlayers = new HashSet<string>();
 
@@ -75,6 +77,12 @@ public class GameManager : MonoBehaviour
             showEnvelopeButton.gameObject.SetActive(false);
         }
 
+        if (secretPassageButton != null)
+        {
+            secretPassageButton.onClick.AddListener(UseSecretPassage);
+            secretPassageButton.gameObject.SetActive(false);
+        }
+
         StartGame();
     }
 
@@ -93,6 +101,7 @@ public class GameManager : MonoBehaviour
         HandlePostMoveInput();
 
     RefreshTurnText();
+    RefreshSecretPassageButton();
 
     switch (currentState)
     {
@@ -115,6 +124,7 @@ public class GameManager : MonoBehaviour
         if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
         if (cardDealer == null) cardDealer = FindAnyObjectByType<CardDealer>();
         if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
+        if (gridManager == null) gridManager = FindAnyObjectByType<GridManager>();
     }
 
     public void StartGame()
@@ -210,6 +220,59 @@ public class GameManager : MonoBehaviour
         PersistTurnState(0, false);
         turnManager.NextTurn();
         BeginTurn();
+    }
+
+    private void RefreshSecretPassageButton()
+    {
+        if (secretPassageButton == null) return;
+
+        bool show = false;
+        if (currentState == GameState.WaitingForRoll &&
+            roomManager != null &&
+            turnManager != null &&
+            turnManager.CurrentPlayer != null)
+        {
+            Room currentRoom = roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name);
+            show = currentRoom != null && roomManager.HasSecretPassage(currentRoom);
+        }
+
+        if (secretPassageButton.gameObject.activeSelf != show)
+            secretPassageButton.gameObject.SetActive(show);
+    }
+
+    public void UseSecretPassage()
+    {
+        if (currentState != GameState.WaitingForRoll) return;
+        if (roomManager == null || turnManager == null || turnManager.CurrentPlayer == null) return;
+        if (gridManager == null) gridManager = FindAnyObjectByType<GridManager>();
+        if (gridManager == null) return;
+
+        Transform unit = turnManager.CurrentPlayer;
+        Room source = roomManager.GetPlayerRoom(unit.name);
+        if (source == null) return;
+
+        Room target = roomManager.GetSecretPassageTarget(source);
+        if (target == null) return;
+
+        source.PlayerLeft(unit.name);
+        Vector2Int? slot = target.PlayerEntered(unit.name);
+        if (!slot.HasValue) return;
+
+        Vector3 worldPos = gridManager.GetPositionFromCoordinates(slot.Value);
+        unit.position = new Vector3(worldPos.x, unit.position.y, worldPos.z);
+        unit.LookAt(new Vector3(worldPos.x, unit.position.y, worldPos.z + 1f));
+
+        turnManager.SetLogicalTile(unit, slot.Value);
+        if (System.Enum.TryParse<CharacterId>(unit.name, out var charId))
+            turnManager.RecordPlayerTile(charId, slot.Value);
+
+        PersistTurnState(0, true);
+        SetState(GameState.PostMoveActions);
+
+        if (rollResultText != null)
+            rollResultText.text = BuildAlreadyMovedText();
+
+        Debug.Log($"[GameManager] {unit.name} used the secret passage from {source.roomName} to {target.roomName}.");
     }
 
     private void HandlePostMoveInput()

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[DefaultExecutionOrder(50)]
 public class Room : MonoBehaviour
 {
     public enum RoomType
@@ -30,8 +31,61 @@ public class Room : MonoBehaviour
         if (string.IsNullOrEmpty(roomName))
             roomName = roomType.ToString();
 
+        EnsureDoorsAreRoomMembers();
         BlockInteriorTiles();
+        ForceDoorsWalkable();
         ComputeInteriorTiles();
+        ValidateConfiguration();
+    }
+
+    void ForceDoorsWalkable()
+    {
+        if (doorTiles == null) return;
+        GridManager gridManager = FindAnyObjectByType<GridManager>();
+        if (gridManager == null) return;
+
+        foreach (Vector2Int door in doorTiles)
+        {
+            Node node = gridManager.GetNode(door);
+            if (node != null) node.walkable = true;
+        }
+    }
+
+    void EnsureDoorsAreRoomMembers()
+    {
+        if (doorTiles == null) return;
+        if (roomTiles == null) roomTiles = new List<Vector2Int>();
+
+        foreach (Vector2Int door in doorTiles)
+        {
+            if (!roomTiles.Contains(door)) roomTiles.Add(door);
+        }
+    }
+
+    void ValidateConfiguration()
+    {
+        if (doorTiles == null || doorTiles.Count == 0)
+        {
+            Debug.LogWarning($"[Room] {roomName} has no door tiles configured — players will not be able to enter or exit.");
+            return;
+        }
+
+        GridManager gridManager = FindAnyObjectByType<GridManager>();
+        if (gridManager == null) return;
+
+        foreach (Vector2Int door in doorTiles)
+        {
+            Node node = gridManager.GetNode(door);
+            if (node == null)
+            {
+                Debug.LogWarning($"[Room] {roomName} door tile {door} is outside the grid.");
+                continue;
+            }
+            if (!node.walkable)
+            {
+                Debug.LogWarning($"[Room] {roomName} door tile {door} is blocked. Make sure no Tile at this coord has 'blocked' = true.");
+            }
+        }
     }
 
     void ComputeInteriorTiles()
