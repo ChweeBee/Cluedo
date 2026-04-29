@@ -40,6 +40,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CardDealer cardDealer;
     [SerializeField] private Envelope envelope;
     [SerializeField] private GridManager gridManager;
+    [SerializeField] private CameraController cameraController;
 
     [Header("UI")]
     [SerializeField] private TMP_Text turnText;
@@ -48,6 +49,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text gameOverText;
     [SerializeField] private Button showEnvelopeButton;
     [SerializeField] private Button secretPassageButton;
+    [SerializeField] private GameObject hudRoot;
 
     private readonly HashSet<string> eliminatedPlayers = new HashSet<string>();
 
@@ -102,6 +104,7 @@ public class GameManager : MonoBehaviour
 
     RefreshTurnText();
     RefreshSecretPassageButton();
+    RefreshHudVisibility();
 
     switch (currentState)
     {
@@ -125,6 +128,7 @@ public class GameManager : MonoBehaviour
         if (cardDealer == null) cardDealer = FindAnyObjectByType<CardDealer>();
         if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
         if (gridManager == null) gridManager = FindAnyObjectByType<GridManager>();
+        if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
     }
 
     public void StartGame()
@@ -220,6 +224,15 @@ public class GameManager : MonoBehaviour
         PersistTurnState(0, false);
         turnManager.NextTurn();
         BeginTurn();
+    }
+
+    private void RefreshHudVisibility()
+    {
+        if (hudRoot == null) return;
+
+        bool showHud = cameraController == null || cameraController.CurrentMode != CameraController.CameraMode.Idle;
+        if (hudRoot.activeSelf != showHud)
+            hudRoot.SetActive(showHud);
     }
 
     private void RefreshSecretPassageButton()

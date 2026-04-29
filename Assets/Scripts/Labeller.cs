@@ -11,7 +11,7 @@ public class Labeller : MonoBehaviour
     public Vector2Int cords = new Vector2Int();
     GridManager gridManager;
 
-    static bool labelsHidden = false;
+    static bool labelsHidden = true;
     static int lastToggleFrame = -1;
 
     private void Awake()

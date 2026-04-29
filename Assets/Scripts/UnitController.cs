@@ -113,6 +113,13 @@ public class UnitController : MonoBehaviour
             {
                 if (hit.transform.tag == "Unit")
                 {
+                    if (GameManager.Instance != null &&
+                        GameManager.Instance.CurrentState != GameManager.GameState.WaitingForMove)
+                    {
+                        Debug.Log("Roll the dice first.");
+                        return;
+                    }
+
                     if (turnManager != null && turnManager.CurrentPlayer != null && hit.transform != turnManager.CurrentPlayer)
                     {
                         Debug.Log("Not this unit's turn.");
