@@ -144,8 +144,9 @@ public void StartSuggestion(string playerName, Room room)
     Debug.Log("Starting suggestion for " + playerName);
     Debug.Log(playerName + " suggests in " + room.roomName);
 
-    // TEMP: pause here so it doesn't auto-reroll
     Debug.Log("Suggestion complete. Press N to end turn.");
+
+    ShowSuggestionPanel();
 }
 
 
@@ -231,7 +232,7 @@ public void StartSuggestion(string playerName, Room room)
             if (accusationResultText != null)
                 accusationResultText.text = "CORRECT! " + turnManager.CurrentPlayer.name + " wins!";
 
-            GameOver(true, turnManager.CurrentPlayer);
+            GameManager.Instance.OnAccusationMade(true, turnManager.CurrentPlayer.name);
         }
         else
         {
@@ -332,12 +333,22 @@ public void StartSuggestion(string playerName, Room room)
 
         //turnManager.NextTurn();
 
+
+
+        GameManager.Instance.OnAccusationMade(false, incorrectPlayer.name);
+
+
         yield return new WaitForSeconds(2f);
 
         if (accusationPanel != null)
             accusationPanel.SetActive(false);
+
     }
 
+    /*
+
+    Obselete
+    
     private void GameOver(bool playerWon, Transform winner)
     {
         gameOver = true;
@@ -350,6 +361,7 @@ public void StartSuggestion(string playerName, Room room)
         if (envelope != null)
             envelope.SetGameOver(true);
     }
+    */
 
     private void ShowEnvelope()
     {
