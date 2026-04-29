@@ -39,9 +39,24 @@ public class CardDealer : MonoBehaviour
     {
         if (PauseManager.IsGamePaused) return;
 
+<<<<<<< Updated upstream
         if (Input.GetKeyDown(KeyCode.K))
         {
             DealHand(3);
         }
+=======
+        if (Input.GetKeyDown(KeyCode.K)) DealToAllPlayers();
+
+        // H now strictly toggles visibility
+        if (Input.GetKeyDown(KeyCode.H)) ToggleAllHands();
+
+        // 1 and 2 now trigger the "Refill UI" logic
+        if (Input.GetKeyDown(KeyCode.Alpha1)) ShowHandByIndex(0);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) ShowHandByIndex(1);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) ShowHandByIndex(2);
+        if (Input.GetKeyDown(KeyCode.Alpha4)) ShowHandByIndex(3);
+        if (Input.GetKeyDown(KeyCode.Alpha5)) ShowHandByIndex(4);
+        if (Input.GetKeyDown(KeyCode.Alpha6)) ShowHandByIndex(5);
+>>>>>>> Stashed changes
     }
 }
