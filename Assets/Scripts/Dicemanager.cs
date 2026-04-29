@@ -49,7 +49,7 @@ public class DiceManager : MonoBehaviour
         if (diceCamera != null) diceCamera.Hide();
     }
 
-    void RollDice()
+    public void RollDice()
     {
         rolling = true;
         totalResult = 0;

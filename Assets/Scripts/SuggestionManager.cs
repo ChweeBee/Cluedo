@@ -139,6 +139,20 @@ public class SuggestionManager : MonoBehaviour
         }
     }
 
+    public void StartSuggestion(string playerName, Room room)
+{
+    Debug.Log("Starting suggestion for " + playerName);
+
+    if (suggestionPanel == null)
+        return;
+
+    suggestionPanel.SetActive(true);
+
+    if (suggestionResultText != null)
+        suggestionResultText.text = "";
+}
+
+
     public void ShowSuggestionPanel()
     {
         if (suggestionPanel == null || gameOver || isWaitingForSuggestionResponse)

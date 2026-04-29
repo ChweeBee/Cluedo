@@ -6353,6 +6353,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.25, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!4 &42079385 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2807189126863342164, guid: 3838c3a37fc3445a4aa5f5cb2ad08fa2, type: 3}
+  m_PrefabInstance: {fileID: 1000671844}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &44369357
 GameObject:
   m_ObjectHideFlags: 0
@@ -28369,6 +28374,69 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &216955030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 216955032}
+  - component: {fileID: 216955031}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &216955031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216955030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeaf33e189726455c93fe3ccc1169e2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentState: 0
+  isGameActive: 1
+  turnManager: {fileID: 1027457508}
+  diceManager: {fileID: 1411982271}
+  cardDealer: {fileID: 261564251}
+  cardManager: {fileID: 125601958}
+  suggestionManager: {fileID: 1028564282}
+  unitController: {fileID: 550751435}
+  envelope: {fileID: 1228479684}
+  cardsPerPlayer: 3
+  postRollDelay: 1
+  postMoveDelay: 1
+  postSuggestionDelay: 2
+  turnIndicator: {fileID: 0}
+  turnText: {fileID: 0}
+  rollResultText: {fileID: 0}
+  gameOverPanel: {fileID: 0}
+  gameOverText: {fileID: 0}
+  showEnvelopeButton: {fileID: 0}
+--- !u!4 &216955032
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216955030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &217481783
 GameObject:
   m_ObjectHideFlags: 0
@@ -125610,7 +125678,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52401219827904d768fc9a39610813e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  players: []
+  players:
+  - {fileID: 2102916759}
+  - {fileID: 42079385}
 --- !u!4 &1027457509
 Transform:
   m_ObjectHideFlags: 0
@@ -125712,6 +125782,68 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.25, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1028564281
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1028564283}
+  - component: {fileID: 1028564282}
+  m_Layer: 0
+  m_Name: SuggestionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1028564282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028564281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 392bf327e3f13429b9eb96024ee30d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  turnManager: {fileID: 1027457508}
+  cardManager: {fileID: 125601958}
+  roomManager: {fileID: 1860288280}
+  envelope: {fileID: 1228479684}
+  suggestionPanel: {fileID: 0}
+  suspectDropdown: {fileID: 0}
+  weaponDropdown: {fileID: 0}
+  suggestButton: {fileID: 0}
+  cancelButton: {fileID: 0}
+  suggestionResultText: {fileID: 0}
+  accusationPanel: {fileID: 0}
+  accuseSuspectDropdown: {fileID: 0}
+  accuseWeaponDropdown: {fileID: 0}
+  accuseRoomDropdown: {fileID: 0}
+  accuseButton: {fileID: 0}
+  cancelAccuseButton: {fileID: 0}
+  accusationResultText: {fileID: 0}
+  showEnvelopeButton: {fileID: 0}
+--- !u!4 &1028564283
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028564281}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1029328853
 GameObject:
   m_ObjectHideFlags: 0
@@ -151127,6 +151259,60 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.25, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1228479683
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1228479685}
+  - component: {fileID: 1228479684}
+  m_Layer: 0
+  m_Name: Envelope
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1228479684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228479683}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fca1fb1b232e74d66bc93037c93c2660, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  suspectCard: {fileID: 0}
+  weaponCard: {fileID: 0}
+  roomCard: {fileID: 0}
+  envelopePanel: {fileID: 0}
+  suspectText: {fileID: 0}
+  weaponText: {fileID: 0}
+  roomText: {fileID: 0}
+  revealButton: {fileID: 0}
+  closeButton: {fileID: 0}
+  cardManager: {fileID: 125601958}
+--- !u!4 &1228479685
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228479683}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1228526930
 GameObject:
   m_ObjectHideFlags: 0
@@ -258666,6 +258852,11 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!4 &2102916759 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1147237390568062213, guid: f30302945155d4f57bac8e32751e81c2, type: 3}
+  m_PrefabInstance: {fileID: 1692600844}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2102974857
 GameObject:
   m_ObjectHideFlags: 0
@@ -263650,3 +263841,6 @@ SceneRoots:
   - {fileID: 202394833}
   - {fileID: 125601960}
   - {fileID: 261564252}
+  - {fileID: 216955032}
+  - {fileID: 1028564283}
+  - {fileID: 1228479685}

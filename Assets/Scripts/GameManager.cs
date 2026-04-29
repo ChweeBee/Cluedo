@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
+    
     [Header("Game State")]
     [SerializeField] private GameState currentState = GameState.Setup;
     [SerializeField] private bool isGameActive = true;
@@ -36,6 +37,10 @@ public class GameManager : MonoBehaviour
     private bool waitingForMove = false;
     private bool gamePaused = false;
     
+    public static GameManager Instance;
+    private HashSet<string> eliminatedPlayers = new HashSet<string>();
+
+
     public enum GameState
     {
         Setup,
@@ -45,6 +50,12 @@ public class GameManager : MonoBehaviour
         AccusationPhase,
         GameOver
     }
+
+        void Awake()
+    {
+        Instance = this;
+    }
+
     
     void Start()
     {
@@ -210,6 +221,21 @@ public class GameManager : MonoBehaviour
         }
         gamePaused = false;
     }
+
+    public bool IsEliminated(string playerName)
+{
+    return eliminatedPlayers.Contains(playerName);
+}
+
+public void EliminatePlayer(string playerName)
+{
+    if (!eliminatedPlayers.Contains(playerName))
+    {
+        eliminatedPlayers.Add(playerName);
+        Debug.Log(playerName + " has been eliminated");
+    }
+}
+
     
     private void EndGame(bool playerWon, Transform winner)
     {
