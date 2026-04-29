@@ -45,10 +45,10 @@ public class SuggestionManager : MonoBehaviour
 
     void Start()
     {
-        if (turnManager == null) turnManager = FindObjectOfType<TurnManager>();
-        if (cardManager == null) cardManager = FindObjectOfType<CardManager>();
-        if (roomManager == null) roomManager = FindObjectOfType<RoomManager>();
-        if (envelope == null) envelope = FindObjectOfType<Envelope>();
+        if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
+        if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
+        if (roomManager == null) roomManager = FindAnyObjectByType<RoomManager>();
+        if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
 
         if (suggestionPanel != null) suggestionPanel.SetActive(false);
         if (accusationPanel != null) accusationPanel.SetActive(false);
@@ -139,17 +139,14 @@ public class SuggestionManager : MonoBehaviour
         }
     }
 
-    public void StartSuggestion(string playerName, Room room)
+public void StartSuggestion(string playerName, Room room)
 {
     Debug.Log("Starting suggestion for " + playerName);
+    Debug.Log(playerName + " suggests in " + room.roomName);
 
-    if (suggestionPanel == null)
-        return;
+    Debug.Log("Suggestion complete. Press N to end turn.");
 
-    suggestionPanel.SetActive(true);
-
-    if (suggestionResultText != null)
-        suggestionResultText.text = "";
+    ShowSuggestionPanel();
 }
 
 
@@ -235,7 +232,7 @@ public class SuggestionManager : MonoBehaviour
             if (accusationResultText != null)
                 accusationResultText.text = "CORRECT! " + turnManager.CurrentPlayer.name + " wins!";
 
-            GameOver(true, turnManager.CurrentPlayer);
+            GameManager.Instance.OnAccusationMade(true, turnManager.CurrentPlayer.name);
         }
         else
         {
@@ -304,24 +301,25 @@ public class SuggestionManager : MonoBehaviour
         isWaitingForSuggestionResponse = false;
 
         yield return new WaitForSeconds(1f);
-        turnManager.NextTurn();
+        //turnManager.NextTurn();
     }
 
-    private Card GetPlayerCardMatchingSuggestion(Transform player)
-    {
-        CardHolder cardHolder = player.GetComponent<CardHolder>();
+private Card GetPlayerCardMatchingSuggestion(Transform player)
+{
+    CluedoPlayer cluedoPlayer = player.GetComponent<CluedoPlayer>();
 
-        if (cardHolder == null || cardHolder.playerHand == null)
-            return null;
-
-        foreach (Card card in cardHolder.playerHand.GetComponentsInChildren<Card>())
-        {
-            if (card == suggestedSuspect || card == suggestedWeapon || card == suggestedRoom)
-                return card;
-        }
-
+    if (cluedoPlayer == null || cluedoPlayer.hand == null)
         return null;
+
+    foreach (Card card in cluedoPlayer.hand)
+    {
+        if (card == suggestedSuspect || card == suggestedWeapon || card == suggestedRoom)
+            return card;
     }
+
+    return null;
+}
+
 
     private void ShowCardToPlayer(Card card, Transform player)
     {
@@ -334,13 +332,23 @@ public class SuggestionManager : MonoBehaviour
 
         Debug.Log(incorrectPlayer.name + " is eliminated from the game");
 
-        turnManager.NextTurn();
+        //turnManager.NextTurn();
+
+
+
+        GameManager.Instance.OnAccusationMade(false, incorrectPlayer.name);
+
 
         yield return new WaitForSeconds(2f);
 
         if (accusationPanel != null)
             accusationPanel.SetActive(false);
+
     }
+
+    /*
+
+    Obselete
 
     private void GameOver(bool playerWon, Transform winner)
     {
@@ -354,6 +362,7 @@ public class SuggestionManager : MonoBehaviour
         if (envelope != null)
             envelope.SetGameOver(true);
     }
+    */
 
     private void ShowEnvelope()
     {

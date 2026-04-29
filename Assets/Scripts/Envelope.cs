@@ -32,7 +32,7 @@ public class Envelope : MonoBehaviour
     
     void Start()
     {
-        if (cardManager == null) cardManager = FindObjectOfType<CardManager>();
+        if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
         
         // Setup UI
         if (envelopePanel != null) envelopePanel.SetActive(false);

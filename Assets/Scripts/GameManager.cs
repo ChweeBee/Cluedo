@@ -1,45 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
-    
-    [Header("Game State")]
-    [SerializeField] private GameState currentState = GameState.Setup;
-    [SerializeField] private bool isGameActive = true;
-    
-    [Header("References")]
-    [SerializeField] private TurnManager turnManager;
-    [SerializeField] private DiceManager diceManager;
-    [SerializeField] private CardDealer cardDealer;
-    [SerializeField] private CardManager cardManager;
-    [SerializeField] private SuggestionManager suggestionManager;
-    [SerializeField] private UnitController unitController;
-    [SerializeField] private Envelope envelope;
-    
-    [Header("Game Settings")]
-    [SerializeField] private int cardsPerPlayer = 3;
-    [SerializeField] private float postRollDelay = 1f;
-    [SerializeField] private float postMoveDelay = 1f;
-    [SerializeField] private float postSuggestionDelay = 2f;
-    
-    [Header("UI")]
-    [SerializeField] private GameObject turnIndicator;
-    [SerializeField] private Text turnText;
-    [SerializeField] private Text rollResultText;
-    [SerializeField] private GameObject gameOverPanel;
-    [SerializeField] private Text gameOverText;
-    [SerializeField] private Button showEnvelopeButton;
-    
-    private bool waitingForRoll = true;
-    private bool waitingForMove = false;
-    private bool gamePaused = false;
-    
     public static GameManager Instance;
-    private HashSet<string> eliminatedPlayers = new HashSet<string>();
-
 
     public enum GameState
     {
@@ -51,238 +17,423 @@ public class GameManager : MonoBehaviour
         GameOver
     }
 
-        void Awake()
+    [Header("Game Settings")]
+    [SerializeField] private float postMoveDelay = 1f;
+
+    private bool isGameActive = true;
+    private bool gamePaused = false;
+    private bool waitingForRoll = true;
+    private bool waitingForMove = false;
+
+    [Header("State")]
+    [SerializeField] private GameState currentState = GameState.Setup;
+
+
+    [Header("References")]
+    [SerializeField] private TurnManager turnManager;
+    [SerializeField] private DiceManager diceManager;
+    [SerializeField] private RoomManager roomManager;
+    [SerializeField] private SuggestionManager suggestionManager;
+    [SerializeField] private CardManager cardManager;
+    [SerializeField] private Envelope envelope;
+
+    [Header("UI")]
+    [SerializeField] private Text turnText;
+    [SerializeField] private Text rollResultText;
+    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private Text gameOverText;
+    [SerializeField] private Button showEnvelopeButton;
+
+    private readonly HashSet<string> eliminatedPlayers = new HashSet<string>();
+
+    public GameState CurrentState => currentState;
+
+    void Awake()
     {
         Instance = this;
     }
 
-    
     void Start()
     {
-        if (turnManager == null) turnManager = FindObjectOfType<TurnManager>();
-        if (diceManager == null) diceManager = FindObjectOfType<DiceManager>();
-        if (cardDealer == null) cardDealer = FindObjectOfType<CardDealer>();
-        if (cardManager == null) cardManager = FindObjectOfType<CardManager>();
-        if (suggestionManager == null) suggestionManager = FindObjectOfType<SuggestionManager>();
-        if (unitController == null) unitController = FindObjectOfType<UnitController>();
-        if (envelope == null) envelope = FindObjectOfType<Envelope>();
-        
+        FindReferences();
+
         if (showEnvelopeButton != null)
         {
             showEnvelopeButton.onClick.AddListener(ShowEnvelope);
             showEnvelopeButton.gameObject.SetActive(false);
         }
-        
-        StartCoroutine(InitializeGame());
-    }
-    
-    private IEnumerator InitializeGame()
-    {
-        currentState = GameState.Setup;
-        Debug.Log("Initializing game...");
-        yield return null;
-        yield return StartCoroutine(DealCardsToPlayers());
-        currentState = GameState.WaitingForRoll;
-        UpdateTurnUI();
-        Debug.Log($"Game initialized. {turnManager.PlayerCount} players in game.");
-    }
-    
-    private IEnumerator DealCardsToPlayers()
-    {
-        if (turnManager == null || cardDealer == null) yield break;
-        
-        if (envelope != null)
-        {
-            if (envelope.SuspectCard != null && cardManager.allCards.Contains(envelope.SuspectCard))
-                cardManager.allCards.Remove(envelope.SuspectCard);
-            if (envelope.WeaponCard != null && cardManager.allCards.Contains(envelope.WeaponCard))
-                cardManager.allCards.Remove(envelope.WeaponCard);
-            if (envelope.RoomCard != null && cardManager.allCards.Contains(envelope.RoomCard))
-                cardManager.allCards.Remove(envelope.RoomCard);
-            cardManager.SortDeck();
-        }
-        
-        foreach (Transform player in turnManager.Players)
-        {
-            CardHolder cardHolder = player.GetComponent<CardHolder>();
-            if (cardHolder == null) cardHolder = player.gameObject.AddComponent<CardHolder>();
-            
-            if (cardHolder.playerHand == null)
-            {
-                GameObject handContainer = new GameObject($"{player.name}_Hand");
-                Canvas canvas = FindObjectOfType<Canvas>();
-                if (canvas != null) handContainer.transform.SetParent(canvas.transform);
-                cardHolder.playerHand = handContainer.transform;
-            }
-            
-            Transform originalHand = cardDealer.playerHand;
-            cardDealer.playerHand = cardHolder.playerHand;
-            cardDealer.DealHand(cardsPerPlayer);
-            cardDealer.playerHand = originalHand;
-            
-            Debug.Log($"Dealt {cardsPerPlayer} cards to {player.name}");
-            yield return null;
-        }
-        
-        Debug.Log($"Finished dealing. Cards remaining: {cardManager.allCards.Count}");
-    }
-    
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.T)) turnManager.NextTurn();
-        if (Input.GetKeyDown(KeyCode.E)) envelope.ShowEnvelope();
 
-        if (!isGameActive || gamePaused) return;
-        
-        switch (currentState)
+        StartGame();
+    }
+
+
+   void Update()
+{
+#if UNITY_EDITOR
+
+    if (Input.GetKeyDown(KeyCode.T))
+        turnManager.NextTurn();
+
+    if (Input.GetKeyDown(KeyCode.E))
+        envelope.ShowEnvelope();
+
+    if (Input.GetKeyDown(KeyCode.S))
+    {
+        if (
+            suggestionManager != null &&
+            turnManager.CurrentPlayer != null &&
+            roomManager != null
+        )
         {
-            case GameState.WaitingForRoll:
-                HandleRollPhase();
-                break;
-            case GameState.WaitingForMove:
-                HandleMovePhase();
-                break;
+            Room room = roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name);
+
+            if (room != null)
+                suggestionManager.StartSuggestion(
+                    turnManager.CurrentPlayer.name,
+                    room
+                );
+            else
+                Debug.Log("Cannot suggest: player is not in a room.");
         }
     }
-    
+
+    if (Input.GetKeyDown(KeyCode.A))
+    {
+        if (suggestionManager != null)
+            suggestionManager.ShowAccusationPanel();
+    }
+
+    if (Input.GetKeyDown(KeyCode.N))
+        EndCurrentTurn();
+
+#endif
+
+    if (!isGameActive || gamePaused)
+        return;
+
+    switch (currentState)
+    {
+        case GameState.WaitingForRoll:
+            HandleRollPhase();
+            break;
+
+        case GameState.WaitingForMove:
+            HandleMovePhase();
+            break;
+    }
+}
+
+    private void FindReferences()
+    {
+        if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
+        if (diceManager == null) diceManager = FindAnyObjectByType<DiceManager>();
+        if (roomManager == null) roomManager = FindAnyObjectByType<RoomManager>();
+        if (suggestionManager == null) suggestionManager = FindAnyObjectByType<SuggestionManager>();
+        if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
+        if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
+    }
+
+    public void StartGame()
+    {
+        SetState(GameState.Setup);
+
+        if (cardManager != null)
+            cardManager.SortDeck();
+
+        BeginTurn();
+    }
+
+    public void BeginTurn()
+    {
+        if (currentState == GameState.GameOver) return;
+
+        if (turnManager == null || turnManager.PlayerCount == 0)
+        {
+            EndGame("Nobody");
+            return;
+        }
+
+        turnManager.SkipEliminatedPlayers();
+
+        if (ShouldEndGame())
+            return;
+
+        SetState(GameState.WaitingForRoll);
+        UpdateTurnUI();
+
+        if (diceManager != null)
+            diceManager.RollDice();
+    }
+
     private void HandleRollPhase()
     {
-        if (diceManager.totalResult > 0)
+        if (diceManager == null) return;
+
+        if (diceManager.totalResult <= 0) return;
+
+        SetState(GameState.WaitingForMove);
+
+        if (rollResultText != null)
+            rollResultText.text = "Rolled: " + diceManager.totalResult + "\nMove your character.";
+
+        Debug.Log("[GameManager] Waiting for player movement.");
+    }
+
+    public void OnPlayerMoved()
+    {
+        if (currentState != GameState.WaitingForMove) return;
+
+        Transform player = turnManager.CurrentPlayer;
+
+        if (player == null)
         {
-            waitingForRoll = false;
-            waitingForMove = true;
-            currentState = GameState.WaitingForMove;
-            UpdateRollUI(diceManager.totalResult);
-            Debug.Log($"Roll result: {diceManager.totalResult}. Ready to move.");
+            EndCurrentTurn();
+            return;
         }
-    }
-    
-    private void HandleMovePhase()
-    {
-        if (waitingForMove && diceManager.totalResult == 0)
+
+        Room currentRoom = null;
+
+        if (roomManager != null)
+            currentRoom = roomManager.GetPlayerRoom(player.name);
+
+        if (currentRoom != null && suggestionManager != null)
         {
-            waitingForMove = false;
-            waitingForRoll = true;
-            StartCoroutine(DelayBeforeNextTurn());
+            SetState(GameState.SuggestionPhase);
+            suggestionManager.StartSuggestion(player.name, currentRoom);
         }
-    }
-    
-    private IEnumerator DelayBeforeNextTurn()
-    {
-        gamePaused = true;
-        yield return new WaitForSeconds(postMoveDelay);
-        currentState = GameState.WaitingForRoll;
-        UpdateTurnUI();
-        waitingForRoll = true;
-        waitingForMove = false;
-        gamePaused = false;
-    }
-    
-    public void OnSuggestionMade()
-    {
-        if (currentState == GameState.WaitingForMove)
-        {
-            currentState = GameState.SuggestionPhase;
-            StartCoroutine(HandleSuggestionPhase());
-        }
-    }
-    
-    private IEnumerator HandleSuggestionPhase()
-    {
-        gamePaused = true;
-        yield return new WaitForSeconds(postSuggestionDelay);
-        currentState = GameState.WaitingForRoll;
-        waitingForRoll = true;
-        waitingForMove = false;
-        if (turnManager != null) { turnManager.NextTurn(); UpdateTurnUI(); }
-        gamePaused = false;
-    }
-    
-    public void OnAccusationMade(bool isCorrect, Transform accuser)
-    {
-        if (isCorrect) EndGame(true, accuser);
-        else StartCoroutine(HandleIncorrectAccusation(accuser));
-    }
-    
-    private IEnumerator HandleIncorrectAccusation(Transform eliminatedPlayer)
-    {
-        currentState = GameState.AccusationPhase;
-        gamePaused = true;
-        Debug.Log($"{eliminatedPlayer.name} made an incorrect accusation and is eliminated!");
-        yield return new WaitForSeconds(2f);
-        
-        if (turnManager.PlayerCount <= 1) EndGame(true, turnManager.Players[0]);
         else
         {
-            currentState = GameState.WaitingForRoll;
-            waitingForRoll = true;
-            waitingForMove = false;
-            UpdateTurnUI();
+            EndCurrentTurn();
         }
-        gamePaused = false;
+    }
+
+    public void EndCurrentTurn()
+    {
+        if (currentState == GameState.GameOver) return;
+
+        turnManager.NextTurn();
+        BeginTurn();
+    }
+
+    public void OnSuggestionFinished()
+    {
+        EndCurrentTurn();
+    }
+
+    public void OnAccusationMade(bool correct, string playerName)
+    {
+        SetState(GameState.AccusationPhase);
+
+        if (correct)
+        {
+            EndGame(playerName);
+        }
+        else
+        {
+            EliminatePlayer(playerName);
+
+            if (!ShouldEndGame())
+                EndCurrentTurn();
+        }
     }
 
     public bool IsEliminated(string playerName)
-{
-    return eliminatedPlayers.Contains(playerName);
-}
-
-public void EliminatePlayer(string playerName)
-{
-    if (!eliminatedPlayers.Contains(playerName))
     {
+        return eliminatedPlayers.Contains(playerName);
+    }
+
+    public void EliminatePlayer(string playerName)
+    {
+        if (eliminatedPlayers.Contains(playerName)) return;
+
         eliminatedPlayers.Add(playerName);
-        Debug.Log(playerName + " has been eliminated");
+        Debug.Log("[GameManager] " + playerName + " has been eliminated.");
+    }
+
+    public bool CheckAccusation(string suspect, string weapon, string room)
+    {
+        if (envelope == null) return false;
+
+        return
+            envelope.SuspectCard != null &&
+            envelope.WeaponCard != null &&
+            envelope.RoomCard != null &&
+            envelope.SuspectCard.cardName == suspect &&
+            envelope.WeaponCard.cardName == weapon &&
+            envelope.RoomCard.cardName == room;
+    }
+
+    private bool ShouldEndGame()
+    {
+        int activePlayers = 0;
+        string lastPlayer = "";
+
+        foreach (Transform player in turnManager.Players)
+        {
+            if (player == null) continue;
+
+            if (!IsEliminated(player.name))
+            {
+                activePlayers++;
+                lastPlayer = player.name;
+            }
+        }
+
+        if (activePlayers == 0)
+        {
+            EndGame("Nobody");
+            return true;
+        }
+
+        if (activePlayers == 1)
+        {
+            EndGame(lastPlayer);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void HandleMovePhase()
+{
+    if (waitingForMove && diceManager.totalResult == 0)
+    {
+        waitingForMove = false;
+        waitingForRoll = true;
+
+        StartCoroutine(DelayBeforeNextTurn());
     }
 }
 
-    
-    private void EndGame(bool playerWon, Transform winner)
+private IEnumerator DelayBeforeNextTurn()
+{
+    gamePaused = true;
+
+    yield return new WaitForSeconds(postMoveDelay);
+
+    currentState = GameState.WaitingForRoll;
+    UpdateTurnUI();
+
+    waitingForRoll = true;
+    waitingForMove = false;
+    gamePaused = false;
+}
+
+
+    public void EndGame(string winner)
     {
-        currentState = GameState.GameOver;
-        isGameActive = false;
-        string message = playerWon ? $"{winner.name} wins!" : "Game Over!";
-        Debug.Log(message);
-        if (envelope != null) envelope.SetGameOver(true);
-        if (showEnvelopeButton != null) showEnvelopeButton.gameObject.SetActive(true);
+        SetState(GameState.GameOver);
+
+        Debug.Log("[GameManager] GAME OVER - " + winner + " wins.");
+
+        if (envelope != null)
+            envelope.SetGameOver(true);
+
+        if (showEnvelopeButton != null)
+            showEnvelopeButton.gameObject.SetActive(true);
+
         if (gameOverPanel != null)
-        {
-            if (gameOverText != null)
-            {
-                string solutionText = envelope != null ? $"\n\nSolution:\n{envelope.SuspectCard?.cardName}\n{envelope.WeaponCard?.cardName}\n{envelope.RoomCard?.cardName}" : "";
-                gameOverText.text = message + solutionText;
-            }
             gameOverPanel.SetActive(true);
-        }
+
+        if (gameOverText != null)
+            gameOverText.text = winner + " wins!";
     }
-    
     private void ShowEnvelope()
     {
-        if (envelope != null) envelope.ShowEnvelope();
+        Debug.Log("Envelope button/debug key pressed");
+
+        if (envelope != null)
+            envelope.ShowEnvelope();
+        else
+            Debug.LogWarning("Envelope reference missing");
     }
-    
+
     private void UpdateTurnUI()
     {
-        if (turnManager != null && turnManager.CurrentPlayer != null)
-        {
-            if (turnText != null) turnText.text = $"{turnManager.CurrentPlayer.name}'s Turn";
-            if (turnIndicator != null) turnIndicator.transform.position = turnManager.CurrentPlayer.position + Vector3.up * 2f;
-        }
+        if (turnText != null && turnManager.CurrentPlayer != null)
+            turnText.text = turnManager.CurrentPlayer.name + "'s Turn";
+
         if (rollResultText != null)
-        {
-            rollResultText.text = currentState == GameState.WaitingForRoll ? "Press SPACE to roll dice" : "";
-            rollResultText.gameObject.SetActive(currentState == GameState.WaitingForRoll || currentState == GameState.WaitingForMove);
-        }
+            rollResultText.text = "Rolling dice...";
     }
-    
-    private void UpdateRollUI(int rollResult)
+
+    private void SetState(GameState newState)
     {
-        if (rollResultText != null) rollResultText.text = $"You rolled: {rollResult}\nClick on tiles to move";
+        currentState = newState;
+        Debug.Log("[GameState] " + newState);
     }
-    
-    public void ResetGame()
+
+
+    private void DebugTestSuggestion()
+{
+    if (turnManager == null || suggestionManager == null || roomManager == null)
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        Debug.LogWarning("Missing manager reference.");
+        return;
     }
+
+    Transform player = turnManager.CurrentPlayer;
+
+    if (player == null)
+    {
+        Debug.LogWarning("No current player.");
+        return;
+    }
+
+    Room room = roomManager.GetPlayerRoom(player.name);
+
+    if (room == null)
+    {
+        Debug.LogWarning(player.name + " is not in a room, so cannot suggest.");
+        return;
+    }
+
+    Debug.Log("DEBUG: Starting suggestion for " + player.name);
+    suggestionManager.StartSuggestion(player.name, room);
+}
+
+private void DebugCorrectAccusation()
+{
+    if (envelope == null)
+    {
+        Debug.LogWarning("Envelope reference missing.");
+        return;
+    }
+
+    if (turnManager == null || turnManager.CurrentPlayer == null)
+    {
+        Debug.LogWarning("No current player.");
+        return;
+    }
+
+    string playerName = turnManager.CurrentPlayer.name;
+
+    bool correct = CheckAccusation(
+        envelope.SuspectCard.cardName,
+        envelope.WeaponCard.cardName,
+        envelope.RoomCard.cardName
+    );
+
+    Debug.Log("DEBUG accusation correct? " + correct);
+
+    OnAccusationMade(correct, playerName);
+}
+
+private void DebugShowEnvelope()
+{
+    if (envelope == null)
+    {
+        envelope = FindAnyObjectByType<Envelope>();
+    }
+
+    if (envelope == null)
+    {
+        Debug.LogWarning("No Envelope found in scene.");
+        return;
+    }
+
+    envelope.ShowEnvelope();
+}
+
+
 }

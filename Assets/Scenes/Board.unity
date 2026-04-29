@@ -18261,6 +18261,7 @@ MonoBehaviour:
   suspectDeck: []
   weaponDeck: []
   roomDeck: []
+  winningEnvelope: []
 --- !u!4 &125601960
 Transform:
   m_ObjectHideFlags: 0
@@ -229385,19 +229386,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentState: 0
-  isGameActive: 1
   turnManager: {fileID: 1027457508}
   diceManager: {fileID: 1411982271}
-  cardDealer: {fileID: 261564251}
-  cardManager: {fileID: 125601958}
+  roomManager: {fileID: 1860288280}
   suggestionManager: {fileID: 1727520400}
-  unitController: {fileID: 550751435}
-  envelope: {fileID: 0}
-  cardsPerPlayer: 3
-  postRollDelay: 1
-  postMoveDelay: 1
-  postSuggestionDelay: 2
-  turnIndicator: {fileID: 0}
+  cardManager: {fileID: 125601958}
+  envelope: {fileID: 1922017288}
   turnText: {fileID: 0}
   rollResultText: {fileID: 0}
   gameOverPanel: {fileID: 0}
