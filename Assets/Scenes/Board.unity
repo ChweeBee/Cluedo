@@ -11790,6 +11790,68 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &83645397
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 83645398}
+  - component: {fileID: 83645399}
+  m_Layer: 5
+  m_Name: PlayerHand_AI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &83645398
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 83645397}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 202394833}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -615, y: 115}
+  m_SizeDelta: {x: 800, y: 200}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!114 &83645399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 83645397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 50
+    m_Right: 50
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 4
+  m_Spacing: 15
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &83672219
 GameObject:
   m_ObjectHideFlags: 0
@@ -18261,6 +18323,7 @@ MonoBehaviour:
   suspectDeck: []
   weaponDeck: []
   roomDeck: []
+  winningEnvelope: []
 --- !u!4 &125601960
 Transform:
   m_ObjectHideFlags: 0
@@ -26541,6 +26604,7 @@ RectTransform:
   m_Children:
   - {fileID: 916341319}
   - {fileID: 1210453177}
+  - {fileID: 83645398}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -43105,6 +43169,26 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 342912206}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &343500554 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 333300425265162175, guid: f30302945155d4f57bac8e32751e81c2, type: 3}
+  m_PrefabInstance: {fileID: 1692600844}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &343500558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 343500554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e31001d46ec4ed848b1905c58bd45cb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isHuman: 1
+  hand: []
+  handUI: {fileID: 1210453177}
 --- !u!1 &344795567
 GameObject:
   m_ObjectHideFlags: 0
@@ -120095,7 +120179,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3296339226768380142, guid: 3838c3a37fc3445a4aa5f5cb2ad08fa2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1989056128}
   m_SourcePrefab: {fileID: 100100000, guid: 3838c3a37fc3445a4aa5f5cb2ad08fa2, type: 3}
 --- !u!1 &1000709243
 GameObject:
@@ -149020,8 +149107,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -300, y: 115}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: -615, y: 115}
+  m_SizeDelta: {x: 800, y: 200}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1210453178
 MonoBehaviour:
@@ -149036,12 +149123,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
-    m_Right: 0
+    m_Left: 50
+    m_Right: 50
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 4
-  m_Spacing: 50
+  m_Spacing: 15
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
@@ -208357,7 +208444,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 333300425265162175, guid: f30302945155d4f57bac8e32751e81c2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 343500558}
   m_SourcePrefab: {fileID: 100100000, guid: f30302945155d4f57bac8e32751e81c2, type: 3}
 --- !u!1 &1694194177
 GameObject:
@@ -245493,6 +245583,26 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1989056124 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3296339226768380142, guid: 3838c3a37fc3445a4aa5f5cb2ad08fa2, type: 3}
+  m_PrefabInstance: {fileID: 1000671844}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1989056128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1989056124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e31001d46ec4ed848b1905c58bd45cb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isHuman: 0
+  hand: []
+  handUI: {fileID: 83645398}
 --- !u!1 &1990757541
 GameObject:
   m_ObjectHideFlags: 0
