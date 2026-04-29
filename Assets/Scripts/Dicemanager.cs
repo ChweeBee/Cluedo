@@ -6,7 +6,6 @@ public class DiceManager : MonoBehaviour
     [SerializeField] DiceRoller dice1;
     [SerializeField] DiceRoller dice2;
     [SerializeField] DiceCamera diceCamera;
-    [SerializeField] CameraController cameraController;
     [Tooltip("Seconds the dice cameras stay visible after both dice settle.")]
     [SerializeField] float diceCameraHoldSeconds = 3f;
 
@@ -16,24 +15,36 @@ public class DiceManager : MonoBehaviour
 
     void Start()
     {
-        if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
+        Debug.Log("DiceManager started");
     }
 
     void Update()
     {
         if (PauseManager.IsGamePaused) return;
 
-        if (Input.GetKeyDown(KeyCode.Space) && CanRoll())
-            RollDice();
-
-        if (rolling)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (dice1.HasFinishedRolling() && dice2.HasFinishedRolling())
-            {
-                totalResult = dice1.finalResult + dice2.finalResult;
-                rolling = false;
-                if (diceCamera != null) StartCoroutine(HideDiceCameraAfterDelay());
-            }
+            Debug.Log("Space detected");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && !rolling)
+        {
+            Debug.Log("Rolling dice...");
+            RollDice();
+        }
+
+        GetResults();
+    }
+
+    public void GetResults()
+    {
+        // Created just tp be compatible with AIController
+        if (dice1.HasFinishedRolling() && dice2.HasFinishedRolling())
+        {
+            totalResult = dice1.finalResult + dice2.finalResult;
+            Debug.Log("Total roll: " + totalResult);
+            rolling = false;
+            if (diceCamera != null) StartCoroutine(HideDiceCameraAfterDelay());
         }
     }
 
@@ -41,42 +52,16 @@ public class DiceManager : MonoBehaviour
     {
         yield return new WaitForSeconds(diceCameraHoldSeconds);
         if (diceCamera != null) diceCamera.Hide();
-        if (cameraController != null)
-        {
-            cameraController.SetMode(CameraController.CameraMode.Default);
-            cameraController.ResetIdleTimer();
-        }
-    }
-
-    public bool CanRoll()
-    {
-        if (rolling) return false;
-        if (totalResult > 0) return false;
-        if (GameManager.Instance != null)
-        {
-            if (GameManager.Instance.CurrentState != GameManager.GameState.WaitingForRoll)
-                return false;
-            if (GameManager.Instance.HasRolledThisTurn)
-                return false;
-        }
-        return true;
     }
 
     public void RollDice()
     {
-        if (!CanRoll()) return;
-
         rolling = true;
         totalResult = 0;
 
+        Debug.Log("Calling StartRoll");
         dice1.StartRoll();
         dice2.StartRoll();
         if (diceCamera != null) diceCamera.Show(dice1.transform, dice2.transform);
-    }
-
-    public void ApplySavedRoll(int total)
-    {
-        rolling = false;
-        totalResult = total;
     }
 }
