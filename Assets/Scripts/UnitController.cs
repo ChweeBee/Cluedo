@@ -13,6 +13,8 @@ public class UnitController : MonoBehaviour
 
     Transform selectedUnit;
     bool unitSelected = false;
+    Vector2Int? pendingTargetCords;
+    bool moveInProgress = false;
 
     List<Node> path = new List<Node>();
 
@@ -37,8 +39,27 @@ public class UnitController : MonoBehaviour
 
         if (turnManager != null)
         {
-            foreach (Transform p in turnManager.Players) SnapToNearestTile(p, force: true);
+            foreach (Transform p in turnManager.Players)
+            {
+                SnapToNearestTile(p, force: true);
+                if (gridManager != null)
+                    turnManager.SetLogicalTile(p, gridManager.GetCoordinatesFromPosition(p.position));
+            }
         }
+    }
+
+    bool IsTileOccupied(Vector2Int cords, Transform excludeUnit)
+    {
+        if (turnManager == null) return false;
+        if (roomManager != null && roomManager.IsRoomTile(cords)) return false;
+
+        foreach (Transform p in turnManager.Players)
+        {
+            if (p == null || p == excludeUnit) continue;
+            if (!turnManager.TryGetLogicalTile(p, out Vector2Int pCords)) continue;
+            if (pCords == cords) return true;
+        }
+        return false;
     }
 
     void SnapToNearestTile(Transform unit, bool force)
@@ -68,8 +89,15 @@ public class UnitController : MonoBehaviour
         {
             unitSelected = false;
             selectedUnit = null;
+            pendingTargetCords = null;
             if (gridManager != null) gridManager.ResetNodes();
             if (cameraController != null) cameraController.SetMode(CameraController.CameraMode.Default);
+            return;
+        }
+
+        if (unitSelected && !moveInProgress && pendingTargetCords.HasValue && Input.GetKeyDown(KeyCode.Space))
+        {
+            ConfirmPendingMove();
             return;
         }
 
@@ -98,7 +126,7 @@ public class UnitController : MonoBehaviour
                 }
                 if (hit.transform.tag == "Tile")
                 {
-                    if (!unitSelected) return;
+                    if (!unitSelected || moveInProgress) return;
                     if (diceManager.totalResult <= 0)
                     {
                         Debug.Log("Roll the dice first");
@@ -107,22 +135,25 @@ public class UnitController : MonoBehaviour
 
                     Vector2Int targetCords = hit.transform.GetComponent<Tile>().cords;
 
-                    // Ignore clicks on tiles that aren't currently within reach or that are blocked.
                     Node targetNode = gridManager.GetNode(targetCords);
                     if (targetNode == null || !targetNode.walkable || !targetNode.explored) return;
 
-                    Vector2Int startCords = new Vector2Int((int) selectedUnit.transform.position.x, (int) selectedUnit.transform.position.z) / gridManager.UnityGridSize;
+                    if (IsTileOccupied(targetCords, selectedUnit))
+                    {
+                        Debug.Log("Tile is occupied by another character.");
+                        return;
+                    }
+
+                    Vector2Int startCords = GetLogicalTileFor(selectedUnit);
                     pathFinder.SetNewDestination(startCords, targetCords);
                     List<Node> newPath = pathFinder.GetNewPath(startCords);
 
                     if (newPath == null || newPath.Count == 0) return;
 
-                    StopAllCoroutines();
                     path.Clear();
                     path = newPath;
-                    StartCoroutine(FollowPath());
-
-                    diceManager.totalResult = 0;
+                    pendingTargetCords = targetCords;
+                    Debug.Log("Path previewed. Press Space to confirm.");
                 }
             }
         }
@@ -148,16 +179,33 @@ public class UnitController : MonoBehaviour
     }
     */
 
+    void ConfirmPendingMove()
+    {
+        if (selectedUnit == null || diceManager == null) return;
+        if (path == null || path.Count == 0) return;
+
+        moveInProgress = true;
+        diceManager.totalResult = 0;
+        pendingTargetCords = null;
+
+        StopAllCoroutines();
+        StartCoroutine(FollowPath());
+    }
+
     IEnumerator FollowPath()
     {
         // turn on walking animation on the selected unit only
         Animator animator = selectedUnit.GetComponentInChildren<Animator>();
         if (animator != null) animator.SetBool("isWalking", true);
 
-        for (int i = 1; i < path.Count; i++)
+        for (int i = 0; i < path.Count; i++)
         {
             Vector3 startPosition = selectedUnit.position;
             Vector3 endPosition = gridManager.GetPositionFromCoordinates(path[i].cords);
+
+            if ((new Vector2(startPosition.x, startPosition.z) - new Vector2(endPosition.x, endPosition.z)).sqrMagnitude < 0.01f)
+                continue;
+
             float travelPercent = 0f;
 
             selectedUnit.LookAt(endPosition);
@@ -181,16 +229,22 @@ public class UnitController : MonoBehaviour
         // Check room entry/exit
         Vector2Int finalCords = path[path.Count - 1].cords;
 
-        // TODO: fix properly
+        bool parsedChar = System.Enum.TryParse<CharacterId>(selectedUnit.name, out var charId);
+
         if (roomManager != null)
         {
-            roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+            Vector2Int? slot = roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+            if (slot.HasValue && slot.Value != finalCords)
+            {
+                yield return WalkToTile(slot.Value);
+                finalCords = slot.Value;
+            }
         }
 
-        if (turnManager != null
-            && System.Enum.TryParse<CharacterId>(selectedUnit.name, out var charId))
+        if (turnManager != null)
         {
-            turnManager.RecordPlayerTile(charId, finalCords);
+            turnManager.SetLogicalTile(selectedUnit, finalCords);
+            if (parsedChar) turnManager.RecordPlayerTile(charId, finalCords);
         }
 
         // turn off walking animation
@@ -204,8 +258,40 @@ public class UnitController : MonoBehaviour
 
         unitSelected = false;
         selectedUnit = null;
+        moveInProgress = false;
+        pendingTargetCords = null;
         if (cameraController != null) cameraController.SetMode(CameraController.CameraMode.Default);
-        if (turnManager != null) turnManager.NextTurn();
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnPlayerMoved();
+        else if (turnManager != null)
+            turnManager.NextTurn();
+    }
+
+    IEnumerator WalkToTile(Vector2Int tile)
+    {
+        if (selectedUnit == null || gridManager == null) yield break;
+
+        Vector3 startPosition = selectedUnit.position;
+        Vector3 endPosition = gridManager.GetPositionFromCoordinates(tile);
+
+        if ((new Vector2(startPosition.x, startPosition.z) - new Vector2(endPosition.x, endPosition.z)).sqrMagnitude < 0.01f)
+            yield break;
+
+        selectedUnit.LookAt(endPosition);
+
+        float travelPercent = 0f;
+        while (travelPercent < 1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(endPosition - startPosition);
+            selectedUnit.rotation = Quaternion.Slerp(selectedUnit.rotation, targetRotation, Time.deltaTime * 10f);
+
+            travelPercent += Time.deltaTime * movementSpeed;
+            travelPercent = Mathf.Clamp01(travelPercent);
+
+            selectedUnit.position = Vector3.Lerp(startPosition, endPosition, travelPercent);
+            yield return new WaitForEndOfFrame();
+        }
     }
 
     IEnumerator ShowReachableAfterPan()
@@ -214,7 +300,28 @@ public class UnitController : MonoBehaviour
         if (selectedUnit == null || pathFinder == null || diceManager == null) yield break;
         if (diceManager.totalResult <= 0) yield break;
 
-        Vector2Int origin = new Vector2Int((int)selectedUnit.position.x, (int)selectedUnit.position.z) / gridManager.UnityGridSize;
+        Vector2Int origin = GetLogicalTileFor(selectedUnit);
         pathFinder.MarkReachable(origin, diceManager.totalResult);
+
+        if (turnManager != null && gridManager != null)
+        {
+            foreach (Transform p in turnManager.Players)
+            {
+                if (p == null || p == selectedUnit) continue;
+                if (!turnManager.TryGetLogicalTile(p, out Vector2Int pCords)) continue;
+                if (roomManager != null && roomManager.IsRoomTile(pCords)) continue;
+                Node occupied = gridManager.GetNode(pCords);
+                if (occupied != null) occupied.explored = false;
+            }
+        }
+    }
+
+    Vector2Int GetLogicalTileFor(Transform unit)
+    {
+        if (turnManager != null && turnManager.TryGetLogicalTile(unit, out Vector2Int tile))
+            return tile;
+        return gridManager != null
+            ? gridManager.GetCoordinatesFromPosition(unit.position)
+            : Vector2Int.zero;
     }
 }

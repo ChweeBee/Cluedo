@@ -61,6 +61,9 @@ public class GameSaveData
     // Last successful dice roll for the current turn. 0 means "no roll yet".
     public int lastDiceTotal = 0;
 
+    // Whether the current player has already rolled this turn. Locks out re-rolls across saves/reloads.
+    public bool hasRolledThisTurn = false;
+
     // Whether cards have been dealt for this save (so we don't re-deal on reload).
     public bool cardsDealt = false;
 

@@ -10,6 +10,7 @@ public class TurnManager : MonoBehaviour
     private int currentIndex = 0;
 
     private readonly Dictionary<CharacterId, Transform> liveTransforms = new Dictionary<CharacterId, Transform>();
+    private readonly Dictionary<Transform, Vector2Int> logicalTiles = new Dictionary<Transform, Vector2Int>();
 
     public int CurrentIndex => currentIndex;
     public int PlayerCount => data != null ? data.players.Count : players.Count;
@@ -71,15 +72,41 @@ public class TurnManager : MonoBehaviour
     public void RegisterSpawnedPlayers(IReadOnlyDictionary<CharacterId, Transform> spawned)
     {
         liveTransforms.Clear();
+        logicalTiles.Clear();
 
         if (spawned == null) return;
 
         foreach (var kvp in spawned)
+        {
             liveTransforms[kvp.Key] = kvp.Value;
+
+            if (data != null)
+            {
+                PlayerSetup setup = data.players.Find(p => p.character == kvp.Key);
+                if (setup != null && setup.HasSavedTile)
+                    logicalTiles[kvp.Value] = new Vector2Int(setup.tileX, setup.tileY);
+            }
+        }
+    }
+
+    public void SetLogicalTile(Transform unit, Vector2Int tile)
+    {
+        if (unit == null) return;
+        logicalTiles[unit] = tile;
+    }
+
+    public bool TryGetLogicalTile(Transform unit, out Vector2Int tile)
+    {
+        if (unit != null && logicalTiles.TryGetValue(unit, out tile)) return true;
+        tile = default;
+        return false;
     }
 
     public void RecordPlayerTile(CharacterId character, Vector2Int tile)
     {
+        if (liveTransforms.TryGetValue(character, out Transform t) && t != null)
+            logicalTiles[t] = tile;
+
         if (data == null) return;
 
         PlayerSetup setup = data.players.Find(p => p.character == character);

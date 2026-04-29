@@ -10,6 +10,8 @@ public class CardDealer : MonoBehaviour
 
     private bool hasDealt = false;
 
+    public bool IsHandVisible => playerHand != null && playerHand.gameObject.activeSelf;
+
     private void Start()
     {
         StartCoroutine(DealNextFrame());

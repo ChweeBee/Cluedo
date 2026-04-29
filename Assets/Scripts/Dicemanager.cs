@@ -16,7 +16,6 @@ public class DiceManager : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("DiceManager started");
         if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
     }
 
@@ -24,23 +23,14 @@ public class DiceManager : MonoBehaviour
     {
         if (PauseManager.IsGamePaused) return;
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Debug.Log("Space detected");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space) && !rolling && totalResult <= 0)
-        {
-            Debug.Log("Rolling dice...");
+        if (Input.GetKeyDown(KeyCode.Space) && CanRoll())
             RollDice();
-        }
 
         if (rolling)
         {
             if (dice1.HasFinishedRolling() && dice2.HasFinishedRolling())
             {
                 totalResult = dice1.finalResult + dice2.finalResult;
-                Debug.Log("Total roll: " + totalResult);
                 rolling = false;
                 if (diceCamera != null) StartCoroutine(HideDiceCameraAfterDelay());
             }
@@ -58,18 +48,27 @@ public class DiceManager : MonoBehaviour
         }
     }
 
+    public bool CanRoll()
+    {
+        if (rolling) return false;
+        if (totalResult > 0) return false;
+        if (GameManager.Instance != null)
+        {
+            if (GameManager.Instance.CurrentState != GameManager.GameState.WaitingForRoll)
+                return false;
+            if (GameManager.Instance.HasRolledThisTurn)
+                return false;
+        }
+        return true;
+    }
+
     public void RollDice()
     {
-        if (rolling || totalResult > 0)
-        {
-            Debug.Log("Dice already rolled this turn; ignoring roll request.");
-            return;
-        }
+        if (!CanRoll()) return;
 
         rolling = true;
         totalResult = 0;
 
-        Debug.Log("Calling StartRoll");
         dice1.StartRoll();
         dice2.StartRoll();
         if (diceCamera != null) diceCamera.Show(dice1.transform, dice2.transform);

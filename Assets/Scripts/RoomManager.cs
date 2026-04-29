@@ -20,23 +20,80 @@ public class RoomManager : MonoBehaviour
         return null;
     }
 
-    public void HandlePlayerMovement(string playerName, Vector2Int tile)
+    public bool IsRoomTile(Vector2Int tile)
     {
-        // Check if player has left their current room
+        if (rooms == null) return false;
+        foreach (Room room in rooms)
+        {
+            if (room != null && room.ContainsTile(tile)) return true;
+        }
+        return false;
+    }
+
+    public bool IsDoorTile(Vector2Int tile)
+    {
+        if (rooms == null) return false;
+        foreach (Room room in rooms)
+        {
+            if (room != null && room.IsDoorTile(tile)) return true;
+        }
+        return false;
+    }
+
+    public Room GetRoomContainingTile(Vector2Int tile)
+    {
+        if (rooms == null) return null;
+        foreach (Room room in rooms)
+        {
+            if (room != null && room.BelongsToRoom(tile)) return room;
+        }
+        return null;
+    }
+
+    public Vector2Int? HandlePlayerMovement(string playerName, Vector2Int tile)
+    {
         Room currentRoom = GetPlayerRoom(playerName);
-        if (currentRoom != null && !currentRoom.ContainsTile(tile))
+        if (currentRoom != null && !currentRoom.BelongsToRoom(tile))
         {
             currentRoom.PlayerLeft(playerName);
         }
 
-        // Check if player has entered a new room
         foreach (Room room in rooms)
         {
-            if (room.ContainsTile(tile))
+            if (room == null) continue;
+            if (room.BelongsToRoom(tile))
             {
-                room.PlayerEntered(playerName);
+                Vector2Int? slot = room.PlayerEntered(playerName);
                 Debug.Log(playerName + " entered " + room.roomName);
-                break;
+                return slot;
+            }
+        }
+
+        return null;
+    }
+
+    void Start()
+    {
+        ReconcilePlayers();
+    }
+
+    void ReconcilePlayers()
+    {
+        TurnManager turnManager = FindAnyObjectByType<TurnManager>();
+        GridManager gridManager = FindAnyObjectByType<GridManager>();
+        if (turnManager == null || gridManager == null || rooms == null) return;
+
+        foreach (Transform p in turnManager.Players)
+        {
+            if (p == null) continue;
+            Vector2Int tile = gridManager.GetCoordinatesFromPosition(p.position);
+            foreach (Room room in rooms)
+            {
+                if (room != null && room.BelongsToRoom(tile))
+                {
+                    room.RegisterPlayerAt(p.name, tile);
+                    break;
+                }
             }
         }
     }

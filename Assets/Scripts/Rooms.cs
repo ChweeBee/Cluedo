@@ -20,13 +20,60 @@ public class Room : MonoBehaviour
     [SerializeField] private List<Vector2Int> roomTiles;
     [SerializeField] private List<Vector2Int> doorTiles;
     [SerializeField] public string roomName;
-    
-    private List<string> playersInRoom = new List<string>();
+
+    private readonly Dictionary<string, Vector2Int> playerSlots = new Dictionary<string, Vector2Int>();
+    private readonly List<Vector2Int> interiorTiles = new List<Vector2Int>();
+    private static readonly Vector2Int[] Neighbours = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
     
     void Start()
     {
         if (string.IsNullOrEmpty(roomName))
             roomName = roomType.ToString();
+
+        BlockInteriorTiles();
+        ComputeInteriorTiles();
+    }
+
+    void ComputeInteriorTiles()
+    {
+        interiorTiles.Clear();
+        if (roomTiles == null) return;
+
+        foreach (Vector2Int tile in roomTiles)
+        {
+            if (doorTiles != null && doorTiles.Contains(tile)) continue;
+
+            bool allNeighboursInRoom = true;
+            foreach (Vector2Int dir in Neighbours)
+            {
+                Vector2Int n = tile + dir;
+                if (!IsRoomMember(n))
+                {
+                    allNeighboursInRoom = false;
+                    break;
+                }
+            }
+
+            if (allNeighboursInRoom) interiorTiles.Add(tile);
+        }
+    }
+
+    bool IsRoomMember(Vector2Int cord)
+    {
+        return (roomTiles != null && roomTiles.Contains(cord)) ||
+               (doorTiles != null && doorTiles.Contains(cord));
+    }
+
+    void BlockInteriorTiles()
+    {
+        GridManager gridManager = FindAnyObjectByType<GridManager>();
+        if (gridManager == null || roomTiles == null) return;
+
+        foreach (Vector2Int cord in roomTiles)
+        {
+            if (doorTiles != null && doorTiles.Contains(cord)) continue;
+            gridManager.BlockNode(cord);
+        }
     }
 
     public bool ContainsTile(Vector2Int cord)
@@ -39,21 +86,59 @@ public class Room : MonoBehaviour
         return doorTiles.Contains(cord);
     }
 
-    // keeping track of player position to make suggestions and stuff easier
-    public void PlayerEntered(string playerName)
+    public bool BelongsToRoom(Vector2Int cord)
     {
-        if (!playersInRoom.Contains(playerName))
-            playersInRoom.Add(playerName);
+        return (roomTiles != null && roomTiles.Contains(cord)) ||
+               (doorTiles != null && doorTiles.Contains(cord));
+    }
+
+    public IReadOnlyList<Vector2Int> DoorTiles => doorTiles;
+
+    // Returns the assigned interior slot tile for the player (allocating one on first entry).
+    public Vector2Int? PlayerEntered(string playerName)
+    {
+        if (playerSlots.TryGetValue(playerName, out Vector2Int existing))
+            return existing;
+
+        HashSet<Vector2Int> taken = new HashSet<Vector2Int>(playerSlots.Values);
+
+        foreach (Vector2Int tile in interiorTiles)
+        {
+            if (!taken.Contains(tile))
+            {
+                playerSlots[playerName] = tile;
+                return tile;
+            }
+        }
+
+        if (roomTiles != null)
+        {
+            foreach (Vector2Int tile in roomTiles)
+            {
+                if (doorTiles != null && doorTiles.Contains(tile)) continue;
+                if (taken.Contains(tile)) continue;
+                playerSlots[playerName] = tile;
+                return tile;
+            }
+        }
+
+        return null;
+    }
+
+    // Used on scene reload to register a player at the tile they were saved on.
+    public void RegisterPlayerAt(string playerName, Vector2Int tile)
+    {
+        playerSlots[playerName] = tile;
     }
 
     public void PlayerLeft(string playerName)
     {
-        playersInRoom.Remove(playerName);
+        playerSlots.Remove(playerName);
     }
 
     public List<string> GetPlayersInRoom()
     {
-        return playersInRoom;
+        return new List<string>(playerSlots.Keys);
     }
 
 

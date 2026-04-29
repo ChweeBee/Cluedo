@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections.Generic;
 using System.Collections;
 
@@ -12,6 +13,7 @@ public class GameManager : MonoBehaviour
         Setup,
         WaitingForRoll,
         WaitingForMove,
+        PostMoveActions,
         SuggestionPhase,
         AccusationPhase,
         GameOver
@@ -35,18 +37,28 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RoomManager roomManager;
     [SerializeField] private SuggestionManager suggestionManager;
     [SerializeField] private CardManager cardManager;
+    [SerializeField] private CardDealer cardDealer;
     [SerializeField] private Envelope envelope;
 
     [Header("UI")]
-    [SerializeField] private Text turnText;
-    [SerializeField] private Text rollResultText;
+    [SerializeField] private TMP_Text turnText;
+    [SerializeField] private TMP_Text rollResultText;
     [SerializeField] private GameObject gameOverPanel;
-    [SerializeField] private Text gameOverText;
+    [SerializeField] private TMP_Text gameOverText;
     [SerializeField] private Button showEnvelopeButton;
 
     private readonly HashSet<string> eliminatedPlayers = new HashSet<string>();
 
     public GameState CurrentState => currentState;
+
+    public bool HasRolledThisTurn
+    {
+        get
+        {
+            GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+            return save != null && save.hasRolledThisTurn;
+        }
+    }
 
     void Awake()
     {
@@ -70,46 +82,17 @@ public class GameManager : MonoBehaviour
    void Update()
 {
 #if UNITY_EDITOR
-
-    if (Input.GetKeyDown(KeyCode.T))
-        turnManager.NextTurn();
-
     if (Input.GetKeyDown(KeyCode.E))
         envelope.ShowEnvelope();
-
-    if (Input.GetKeyDown(KeyCode.S))
-    {
-        if (
-            suggestionManager != null &&
-            turnManager.CurrentPlayer != null &&
-            roomManager != null
-        )
-        {
-            Room room = roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name);
-
-            if (room != null)
-                suggestionManager.StartSuggestion(
-                    turnManager.CurrentPlayer.name,
-                    room
-                );
-            else
-                Debug.Log("Cannot suggest: player is not in a room.");
-        }
-    }
-
-    if (Input.GetKeyDown(KeyCode.A))
-    {
-        if (suggestionManager != null)
-            suggestionManager.ShowAccusationPanel();
-    }
-
-    if (Input.GetKeyDown(KeyCode.N))
-        EndCurrentTurn();
-
 #endif
 
     if (!isGameActive || gamePaused)
         return;
+
+    if (currentState == GameState.PostMoveActions)
+        HandlePostMoveInput();
+
+    RefreshTurnText();
 
     switch (currentState)
     {
@@ -130,6 +113,7 @@ public class GameManager : MonoBehaviour
         if (roomManager == null) roomManager = FindAnyObjectByType<RoomManager>();
         if (suggestionManager == null) suggestionManager = FindAnyObjectByType<SuggestionManager>();
         if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
+        if (cardDealer == null) cardDealer = FindAnyObjectByType<CardDealer>();
         if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
     }
 
@@ -163,6 +147,7 @@ public class GameManager : MonoBehaviour
 
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
         int savedRoll = save != null ? save.lastDiceTotal : 0;
+        bool alreadyRolled = save != null && save.hasRolledThisTurn;
 
         if (diceManager != null)
         {
@@ -170,11 +155,17 @@ public class GameManager : MonoBehaviour
             {
                 diceManager.ApplySavedRoll(savedRoll);
                 if (rollResultText != null)
-                    rollResultText.text = "Rolled: " + savedRoll + "\nMove your character.";
+                    rollResultText.text = BuildPostRollText(savedRoll);
             }
             else
             {
                 diceManager.totalResult = 0;
+                if (alreadyRolled)
+                {
+                    SetState(GameState.PostMoveActions);
+                    if (rollResultText != null)
+                        rollResultText.text = BuildAlreadyMovedText();
+                }
             }
         }
     }
@@ -189,7 +180,7 @@ public class GameManager : MonoBehaviour
         SetState(GameState.WaitingForMove);
 
         if (rollResultText != null)
-            rollResultText.text = "Rolled: " + diceManager.totalResult + "\nMove your character.";
+            rollResultText.text = BuildPostRollText(diceManager.totalResult);
 
         Debug.Log("[GameManager] Waiting for player movement.");
     }
@@ -198,47 +189,123 @@ public class GameManager : MonoBehaviour
     {
         if (currentState != GameState.WaitingForMove) return;
 
-        Transform player = turnManager.CurrentPlayer;
+        PersistTurnState(0, true);
 
-        if (player == null)
+        if (turnManager.CurrentPlayer == null)
         {
             EndCurrentTurn();
             return;
         }
 
-        Room currentRoom = null;
+        SetState(GameState.PostMoveActions);
 
-        if (roomManager != null)
-            currentRoom = roomManager.GetPlayerRoom(player.name);
-
-        if (currentRoom != null && suggestionManager != null)
-        {
-            SetState(GameState.SuggestionPhase);
-            suggestionManager.StartSuggestion(player.name, currentRoom);
-        }
-        else
-        {
-            EndCurrentTurn();
-        }
+        if (rollResultText != null)
+            rollResultText.text = BuildAlreadyMovedText();
     }
 
     public void EndCurrentTurn()
     {
         if (currentState == GameState.GameOver) return;
 
-        PersistDiceTotal(0);
+        PersistTurnState(0, false);
         turnManager.NextTurn();
         BeginTurn();
     }
 
+    private void HandlePostMoveInput()
+    {
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            EndCurrentTurn();
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            TryStartSuggestion();
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            if (suggestionManager == null || roomManager == null || turnManager.CurrentPlayer == null)
+                return;
+
+            Room accusationRoom = roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name);
+            if (accusationRoom == null)
+            {
+                Debug.Log("Cannot accuse: player must be in a room.");
+                return;
+            }
+
+            SetState(GameState.AccusationPhase);
+            suggestionManager.ShowAccusationPanel();
+        }
+    }
+
+    private void TryStartSuggestion()
+    {
+        if (suggestionManager == null || turnManager.CurrentPlayer == null || roomManager == null)
+            return;
+
+        Room room = roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name);
+        if (room == null)
+        {
+            Debug.Log("Cannot suggest: player is not in a room.");
+            return;
+        }
+
+        SetState(GameState.SuggestionPhase);
+        suggestionManager.StartSuggestion(turnManager.CurrentPlayer.name, room);
+    }
+
+    private string BuildPostRollText(int total)
+    {
+        string text = "Rolled: " + total +
+                      "\nPress Space to confirm move" +
+                      "\nPress N to end turn";
+
+        if (IsCurrentPlayerInRoom())
+        {
+            text += "\nPress S to make a suggestion";
+            text += "\nPress A to make an accusation";
+        }
+        return text;
+    }
+
+    private string BuildAlreadyMovedText()
+    {
+        string text = "Already moved this turn." +
+                      "\nPress N to end turn";
+
+        if (IsCurrentPlayerInRoom())
+        {
+            text += "\nPress S to make a suggestion";
+            text += "\nPress A to make an accusation";
+        }
+        return text;
+    }
+
+    private bool IsCurrentPlayerInRoom()
+    {
+        if (roomManager == null || turnManager == null || turnManager.CurrentPlayer == null) return false;
+        return roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name) != null;
+    }
+
     private void PersistDiceTotal(int total)
+    {
+        PersistTurnState(total, total > 0);
+    }
+
+    private void PersistTurnState(int roll, bool hasRolled)
     {
         if (GameBootstrap.Instance == null) return;
         GameSaveData save = GameBootstrap.Instance.Active;
         if (save == null || save.slotIndex < 0) return;
-        if (save.lastDiceTotal == total) return;
+        if (save.lastDiceTotal == roll && save.hasRolledThisTurn == hasRolled) return;
 
-        save.lastDiceTotal = total;
+        save.lastDiceTotal = roll;
+        save.hasRolledThisTurn = hasRolled;
         SaveSystem.Save(save.slotIndex, save);
     }
 
@@ -377,11 +444,27 @@ private IEnumerator DelayBeforeNextTurn()
 
     private void UpdateTurnUI()
     {
-        if (turnText != null && turnManager.CurrentPlayer != null)
-            turnText.text = turnManager.CurrentPlayer.name + "'s Turn";
+        RefreshTurnText();
 
         if (rollResultText != null)
             rollResultText.text = "Press Space to roll";
+    }
+
+    private void RefreshTurnText()
+    {
+        if (turnText == null || turnManager == null || turnManager.CurrentPlayer == null) return;
+
+        string playerName = turnManager.CurrentPlayer.name;
+        bool handVisible = cardDealer != null && cardDealer.IsHandVisible;
+        int playerNumber = turnManager.CurrentIndex + 1;
+
+        string hint = handVisible
+            ? "Press H to hide"
+            : "Press " + playerNumber + " to view your cards and notebook";
+
+        string desired = playerName + "'s Turn\n" + hint;
+        if (turnText.text != desired)
+            turnText.text = desired;
     }
 
     private void SetState(GameState newState)

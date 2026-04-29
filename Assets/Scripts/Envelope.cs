@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections.Generic;
 
 
@@ -12,9 +13,9 @@ public class Envelope : MonoBehaviour
     
     [Header("UI References")]
     [SerializeField] private GameObject envelopePanel;
-    [SerializeField] private Text suspectText;
-    [SerializeField] private Text weaponText;
-    [SerializeField] private Text roomText;
+    [SerializeField] private TMP_Text suspectText;
+    [SerializeField] private TMP_Text weaponText;
+    [SerializeField] private TMP_Text roomText;
     [SerializeField] private Button revealButton;
     [SerializeField] private Button closeButton;
     

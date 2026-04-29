@@ -21,22 +21,16 @@ public class DiceRoller : MonoBehaviour
     void Initialise()
     {
         rb = GetComponent<Rigidbody>();
-        
+
         if (rb == null)
-        {
-            Debug.LogError($"[DiceRoller] No Rigidbody found on {gameObject.name}! Adding one...");
             rb = gameObject.AddComponent<Rigidbody>();
-        }
-        
+
         startPosition = transform.position;
-        
+
         if (rb != null)
-        {
             rb.isKinematic = true;
-        }
-        
+
         hasInitialised = true;
-        Debug.Log($"[DiceRoller] {gameObject.name} initialised");
     }
 
     void DetermineFinishedSide()
@@ -58,13 +52,10 @@ public class DiceRoller : MonoBehaviour
             // Convert the string result to an actual number
             finalResult = int.Parse(resultLabel);
         }
-        catch (System.Exception e)
+        catch
         {
-            Debug.LogWarning($"[DiceRoller] Error determining dice face: {e.Message}. Using random result.");
             finalResult = Random.Range(1, 7);
         }
-        
-        Debug.Log($"[DiceRoller] {gameObject.name} rolled: {finalResult}");
     }
 
     void Update()
@@ -86,17 +77,13 @@ public class DiceRoller : MonoBehaviour
                         rb.linearVelocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
                         isRolling = false;
-                        Debug.Log($"[DiceRoller] {gameObject.name} landed");
-
                         DetermineFinishedSide();
                     }
                 }
                 else
                 {
-                    // Fallback if rigidbody is missing
                     isRolling = false;
                     finalResult = Random.Range(1, 7);
-                    Debug.LogWarning($"[DiceRoller] {gameObject.name} missing Rigidbody, using random result: {finalResult}");
                 }
             }
         }
@@ -111,11 +98,8 @@ public class DiceRoller : MonoBehaviour
             Initialise();
         }
         
-        // Check if rigidbody exists
         if (rb == null)
         {
-            Debug.LogError($"[DiceRoller] {gameObject.name} has no Rigidbody! Cannot roll.");
-            // Fallback: just set a random result
             finalResult = Random.Range(1, 7);
             isRolling = false;
             return;
@@ -133,11 +117,8 @@ public class DiceRoller : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Apply force
         rb.AddForce(Vector3.up * launchForce, ForceMode.Impulse);
         rb.AddTorque(Random.insideUnitSphere * 15f, ForceMode.Impulse);
-        
-        Debug.Log($"[DiceRoller] {gameObject.name} started rolling");
     }
 
     void CheckDirection(Vector3 sideDirection, string label, ref float closestDot, ref string resultLabel)
@@ -153,17 +134,13 @@ public class DiceRoller : MonoBehaviour
 
     public bool HasFinishedRolling()
     {
-        // Safety check: if rolling but took too long, force finish
         if (isRolling && timer > rollDelay + 3f)
         {
-            Debug.LogWarning($"[DiceRoller] {gameObject.name} took too long to finish. Forcing completion.");
             isRolling = false;
             if (finalResult == 0)
-            {
                 finalResult = Random.Range(1, 7);
-            }
         }
-        
+
         return !isRolling && finalResult > 0;
     }
 }

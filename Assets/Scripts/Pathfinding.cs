@@ -16,6 +16,7 @@ public class Pathfinding : MonoBehaviour
     Dictionary<Vector2Int, Node> reached = new Dictionary<Vector2Int, Node>();
 
     GridManager gridManager;
+    RoomManager roomManager;
     Dictionary<Vector2Int, Node> grid = new Dictionary<Vector2Int, Node>();
 
     // Prioritises right, left, up, down when finding new paths
@@ -40,6 +41,33 @@ public class Pathfinding : MonoBehaviour
         }
     }
 
+    private void EnsureRoomManager()
+    {
+        if (roomManager == null) roomManager = FindAnyObjectByType<RoomManager>();
+    }
+
+    List<Vector2Int> GetSeedTiles(Vector2Int origin)
+    {
+        List<Vector2Int> seeds = new List<Vector2Int>();
+        if (!grid.ContainsKey(origin)) return seeds;
+
+        EnsureRoomManager();
+        Room room = roomManager != null ? roomManager.GetRoomContainingTile(origin) : null;
+
+        if (room != null && room.DoorTiles != null && room.DoorTiles.Count > 0)
+        {
+            foreach (Vector2Int door in room.DoorTiles)
+            {
+                if (grid.ContainsKey(door) && grid[door].walkable && !seeds.Contains(door))
+                    seeds.Add(door);
+            }
+            if (seeds.Count > 0) return seeds;
+        }
+
+        if (grid[origin].walkable) seeds.Add(origin);
+        return seeds;
+    }
+
     public List<Node> GetNewPath()
     {
         return GetNewPath(startCords);
@@ -47,7 +75,7 @@ public class Pathfinding : MonoBehaviour
 
     public List<Node> GetNewPath(Vector2Int coordinates)
     {
-        gridManager.ResetNodes();
+        gridManager.ResetPath();
 
         BreadthFirstSearch(coordinates);
         return BuildPath();
@@ -60,8 +88,15 @@ public class Pathfinding : MonoBehaviour
 
         bool isRunning = true;
 
-        frontier.Enqueue(grid[coordinates]);
-        reached.Add(coordinates, grid[coordinates]);
+        List<Vector2Int> seeds = GetSeedTiles(coordinates);
+        if (seeds.Count == 0) return;
+
+        foreach (Vector2Int s in seeds)
+        {
+            if (reached.ContainsKey(s)) continue;
+            frontier.Enqueue(grid[s]);
+            reached.Add(s, grid[s]);
+        }
 
         while (frontier.Count > 0 && isRunning == true)
         {
@@ -129,11 +164,20 @@ public void MarkReachable(Vector2Int origin, int maxSteps)
 {
     gridManager.ResetNodes();
     if (!grid.ContainsKey(origin) || maxSteps <= 0) return;
-    if (!grid[origin].walkable) return;
 
-    HashSet<Vector2Int> visited = new HashSet<Vector2Int> { origin };
+    List<Vector2Int> seeds = GetSeedTiles(origin);
+    if (seeds.Count == 0) return;
+
+    HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
     Queue<KeyValuePair<Vector2Int, int>> queue = new Queue<KeyValuePair<Vector2Int, int>>();
-    queue.Enqueue(new KeyValuePair<Vector2Int, int>(origin, 0));
+
+    foreach (Vector2Int s in seeds)
+    {
+        if (visited.Contains(s)) continue;
+        visited.Add(s);
+        queue.Enqueue(new KeyValuePair<Vector2Int, int>(s, 0));
+        grid[s].explored = true;
+    }
 
     while (queue.Count > 0)
     {
