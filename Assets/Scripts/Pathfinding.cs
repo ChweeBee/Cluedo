@@ -126,6 +126,37 @@ public class Pathfinding : MonoBehaviour
         BroadcastMessage("RecalculatePath", false, SendMessageOptions.DontRequireReceiver);
     }
 
+public void MarkReachable(Vector2Int origin, int maxSteps)
+{
+    gridManager.ResetNodes();
+    if (!grid.ContainsKey(origin) || maxSteps <= 0) return;
+    if (!grid[origin].walkable) return;
+
+    HashSet<Vector2Int> visited = new HashSet<Vector2Int> { origin };
+    Queue<KeyValuePair<Vector2Int, int>> queue = new Queue<KeyValuePair<Vector2Int, int>>();
+    queue.Enqueue(new KeyValuePair<Vector2Int, int>(origin, 0));
+
+    while (queue.Count > 0)
+    {
+        var entry = queue.Dequeue();
+        Vector2Int cords = entry.Key;
+        int dist = entry.Value;
+
+        if (dist > 0) grid[cords].explored = true;
+        if (dist >= maxSteps) continue;
+
+        foreach (Vector2Int dir in searchOrder)
+        {
+            Vector2Int n = cords + dir;
+            if (!grid.ContainsKey(n)) continue;
+            if (!grid[n].walkable) continue;
+            if (visited.Contains(n)) continue;
+            visited.Add(n);
+            queue.Enqueue(new KeyValuePair<Vector2Int, int>(n, dist + 1));
+        }
+    }
+}
+
 public void SetNewDestination(Vector2Int startCoordinates, Vector2Int targetCoordinates)
 {
     startCords = startCoordinates;

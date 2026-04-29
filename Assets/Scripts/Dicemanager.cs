@@ -1,9 +1,13 @@
+using System.Collections;
 using UnityEngine;
 
 public class DiceManager : MonoBehaviour
 {
     [SerializeField] DiceRoller dice1;
     [SerializeField] DiceRoller dice2;
+    [SerializeField] DiceCamera diceCamera;
+    [Tooltip("Seconds the dice cameras stay visible after both dice settle.")]
+    [SerializeField] float diceCameraHoldSeconds = 3f;
 
     public int totalResult;
 
@@ -34,8 +38,15 @@ public class DiceManager : MonoBehaviour
                 totalResult = dice1.finalResult + dice2.finalResult;
                 Debug.Log("Total roll: " + totalResult);
                 rolling = false;
+                if (diceCamera != null) StartCoroutine(HideDiceCameraAfterDelay());
             }
         }
+    }
+
+    IEnumerator HideDiceCameraAfterDelay()
+    {
+        yield return new WaitForSeconds(diceCameraHoldSeconds);
+        if (diceCamera != null) diceCamera.Hide();
     }
 
     void RollDice()
@@ -46,5 +57,6 @@ public class DiceManager : MonoBehaviour
         Debug.Log("Calling StartRoll");
         dice1.StartRoll();
         dice2.StartRoll();
+        if (diceCamera != null) diceCamera.Show(dice1.transform, dice2.transform);
     }
 }
