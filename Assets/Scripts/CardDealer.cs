@@ -7,6 +7,7 @@ public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
     public Transform playerHand; // This is your main UI container
+    public Transform PublicHand;
 
     private bool hasDealt = false;
 
@@ -23,23 +24,13 @@ public class CardDealer : MonoBehaviour
 
     public void DealToAllPlayers()
     {
-        if (hasDealt) { Debug.Log("Cards already dealt"); return; }
+        if (hasDealt) return;
 
         CluedoPlayer[] allPlayers = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
-        if (allPlayers.Length == 0) { Debug.LogError("No Players found in scene"); return; }
-
-        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
-
-        if (save != null && save.cardsDealt && HasAnySavedHands(save))
-        {
-            RestoreSavedHands(save, allPlayers);
-            hasDealt = true;
-            HideAllHands();
-            Debug.Log($"Restored saved hands for {allPlayers.Length} players.");
-            return;
-        }
+        if (allPlayers.Length == 0) return;
 
         hasDealt = true;
+        cardManager.SortDeck();
         PickWinners();
 
         List<Card> remainingCards = new List<Card>();
@@ -48,25 +39,44 @@ public class CardDealer : MonoBehaviour
             if (!cardManager.winningEnvelope.Contains(c)) remainingCards.Add(c);
         }
 
+        int playerCount = allPlayers.Length;
+        int cardsPerPlayer = remainingCards.Count / playerCount;
+        int totalFairCards = cardsPerPlayer * playerCount;
+
+        // CLEAR PUBLIC HAND FIRST
+        if (PublicHand != null)
+        {
+            foreach (Transform child in PublicHand) DestroyImmediate(child.gameObject);
+        }
+
         for (int i = 0; i < remainingCards.Count; i++)
         {
-            Card temp = remainingCards[i];
-            int randomIndex = Random.Range(i, remainingCards.Count);
-            remainingCards[i] = remainingCards[randomIndex];
-            remainingCards[randomIndex] = temp;
+            if (i < totalFairCards)
+            {
+                int pIndex = i % playerCount;
+                allPlayers[pIndex].hand.Add(remainingCards[i]);
+            }
+            else
+            {
+                // --- THE EXTRAS ---
+                if (PublicHand != null)
+                {
+                    Debug.Log("Spawning Extra Card: " + remainingCards[i].cardName);
+                    GameObject cardObj = Instantiate(remainingCards[i].gameObject, PublicHand);
+                    cardObj.transform.localScale = Vector3.one;
+                    cardObj.SetActive(true); // Ensure it's not starting disabled
+                }
+                else
+                {
+                    Debug.LogError("FATAL: PublicHand is empty in the Inspector! Drag the object in!");
+                }
+            }
         }
-
-        int playerIndex = 0;
-        foreach (Card card in remainingCards)
-        {
-            allPlayers[playerIndex].hand.Add(card);
-            playerIndex = (playerIndex + 1) % allPlayers.Length;
-        }
-
-        PersistDealtHands(save, allPlayers);
 
         ShowHandByIndex(0);
-        Debug.Log($"Dealt {remainingCards.Count} cards across {allPlayers.Length} players.");
+
+        if (PublicHand != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(PublicHand.GetComponent<RectTransform>());
     }
 
     bool HasAnySavedHands(GameSaveData save)
@@ -125,9 +135,24 @@ public class CardDealer : MonoBehaviour
     void PickWinners()
     {
         cardManager.winningEnvelope.Clear();
-        cardManager.winningEnvelope.Add(cardManager.suspectDeck[Random.Range(0, cardManager.suspectDeck.Count)]);
-        cardManager.winningEnvelope.Add(cardManager.weaponDeck[Random.Range(0, cardManager.weaponDeck.Count)]);
-        cardManager.winningEnvelope.Add(cardManager.roomDeck[Random.Range(0, cardManager.roomDeck.Count)]);
+
+        // Check Suspects
+        if (cardManager.suspectDeck.Count > 0)
+            cardManager.winningEnvelope.Add(cardManager.suspectDeck[Random.Range(0, cardManager.suspectDeck.Count)]);
+        else
+            Debug.LogError("Suspect Deck is empty! Drag cards into the CardManager in the Inspector.");
+
+        // Check Weapons
+        if (cardManager.weaponDeck.Count > 0)
+            cardManager.winningEnvelope.Add(cardManager.weaponDeck[Random.Range(0, cardManager.weaponDeck.Count)]);
+        else
+            Debug.LogError("Weapon Deck is empty!");
+
+        // Check Rooms
+        if (cardManager.roomDeck.Count > 0)
+            cardManager.winningEnvelope.Add(cardManager.roomDeck[Random.Range(0, cardManager.roomDeck.Count)]);
+        else
+            Debug.LogError("Room Deck is empty!");
     }
 
     // This clears the UI and refills it with a specific player's cards
