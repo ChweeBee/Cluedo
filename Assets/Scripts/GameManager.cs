@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,8 +17,17 @@ public class GameManager : MonoBehaviour
         GameOver
     }
 
+    [Header("Game Settings")]
+    [SerializeField] private float postMoveDelay = 1f;
+
+    private bool isGameActive = true;
+    private bool gamePaused = false;
+    private bool waitingForRoll = true;
+    private bool waitingForMove = false;
+
     [Header("State")]
     [SerializeField] private GameState currentState = GameState.Setup;
+
 
     [Header("References")]
     [SerializeField] private TurnManager turnManager;
@@ -56,11 +66,62 @@ public class GameManager : MonoBehaviour
         StartGame();
     }
 
-    void Update()
+
+   void Update()
+{
+#if UNITY_EDITOR
+
+    if (Input.GetKeyDown(KeyCode.T))
+        turnManager.NextTurn();
+
+    if (Input.GetKeyDown(KeyCode.E))
+        envelope.ShowEnvelope();
+
+    if (Input.GetKeyDown(KeyCode.S))
     {
-        if (currentState == GameState.WaitingForRoll)
-            HandleRollPhase();
+        if (
+            suggestionManager != null &&
+            turnManager.CurrentPlayer != null &&
+            roomManager != null
+        )
+        {
+            Room room = roomManager.GetPlayerRoom(turnManager.CurrentPlayer.name);
+
+            if (room != null)
+                suggestionManager.StartSuggestion(
+                    turnManager.CurrentPlayer.name,
+                    room
+                );
+            else
+                Debug.Log("Cannot suggest: player is not in a room.");
+        }
     }
+
+    if (Input.GetKeyDown(KeyCode.A))
+    {
+        if (suggestionManager != null)
+            suggestionManager.ShowAccusationPanel();
+    }
+
+    if (Input.GetKeyDown(KeyCode.N))
+        EndCurrentTurn();
+
+#endif
+
+    if (!isGameActive || gamePaused)
+        return;
+
+    switch (currentState)
+    {
+        case GameState.WaitingForRoll:
+            HandleRollPhase();
+            break;
+
+        case GameState.WaitingForMove:
+            HandleMovePhase();
+            break;
+    }
+}
 
     private void FindReferences()
     {
@@ -233,6 +294,32 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
+    private void HandleMovePhase()
+{
+    if (waitingForMove && diceManager.totalResult == 0)
+    {
+        waitingForMove = false;
+        waitingForRoll = true;
+
+        StartCoroutine(DelayBeforeNextTurn());
+    }
+}
+
+private IEnumerator DelayBeforeNextTurn()
+{
+    gamePaused = true;
+
+    yield return new WaitForSeconds(postMoveDelay);
+
+    currentState = GameState.WaitingForRoll;
+    UpdateTurnUI();
+
+    waitingForRoll = true;
+    waitingForMove = false;
+    gamePaused = false;
+}
+
+
     public void EndGame(string winner)
     {
         SetState(GameState.GameOver);
@@ -251,11 +338,14 @@ public class GameManager : MonoBehaviour
         if (gameOverText != null)
             gameOverText.text = winner + " wins!";
     }
-
     private void ShowEnvelope()
     {
+        Debug.Log("Envelope button/debug key pressed");
+
         if (envelope != null)
             envelope.ShowEnvelope();
+        else
+            Debug.LogWarning("Envelope reference missing");
     }
 
     private void UpdateTurnUI()
@@ -272,4 +362,78 @@ public class GameManager : MonoBehaviour
         currentState = newState;
         Debug.Log("[GameState] " + newState);
     }
+
+
+    private void DebugTestSuggestion()
+{
+    if (turnManager == null || suggestionManager == null || roomManager == null)
+    {
+        Debug.LogWarning("Missing manager reference.");
+        return;
+    }
+
+    Transform player = turnManager.CurrentPlayer;
+
+    if (player == null)
+    {
+        Debug.LogWarning("No current player.");
+        return;
+    }
+
+    Room room = roomManager.GetPlayerRoom(player.name);
+
+    if (room == null)
+    {
+        Debug.LogWarning(player.name + " is not in a room, so cannot suggest.");
+        return;
+    }
+
+    Debug.Log("DEBUG: Starting suggestion for " + player.name);
+    suggestionManager.StartSuggestion(player.name, room);
+}
+
+private void DebugCorrectAccusation()
+{
+    if (envelope == null)
+    {
+        Debug.LogWarning("Envelope reference missing.");
+        return;
+    }
+
+    if (turnManager == null || turnManager.CurrentPlayer == null)
+    {
+        Debug.LogWarning("No current player.");
+        return;
+    }
+
+    string playerName = turnManager.CurrentPlayer.name;
+
+    bool correct = CheckAccusation(
+        envelope.SuspectCard.cardName,
+        envelope.WeaponCard.cardName,
+        envelope.RoomCard.cardName
+    );
+
+    Debug.Log("DEBUG accusation correct? " + correct);
+
+    OnAccusationMade(correct, playerName);
+}
+
+private void DebugShowEnvelope()
+{
+    if (envelope == null)
+    {
+        envelope = FindAnyObjectByType<Envelope>();
+    }
+
+    if (envelope == null)
+    {
+        Debug.LogWarning("No Envelope found in scene.");
+        return;
+    }
+
+    envelope.ShowEnvelope();
+}
+
+
 }

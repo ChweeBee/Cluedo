@@ -139,17 +139,13 @@ public class SuggestionManager : MonoBehaviour
         }
     }
 
-    public void StartSuggestion(string playerName, Room room)
+public void StartSuggestion(string playerName, Room room)
 {
     Debug.Log("Starting suggestion for " + playerName);
+    Debug.Log(playerName + " suggests in " + room.roomName);
 
-    if (suggestionPanel == null)
-        return;
-
-    suggestionPanel.SetActive(true);
-
-    if (suggestionResultText != null)
-        suggestionResultText.text = "";
+    // TEMP: pause here so it doesn't auto-reroll
+    Debug.Log("Suggestion complete. Press N to end turn.");
 }
 
 
@@ -304,7 +300,7 @@ public class SuggestionManager : MonoBehaviour
         isWaitingForSuggestionResponse = false;
 
         yield return new WaitForSeconds(1f);
-        turnManager.NextTurn();
+        //turnManager.NextTurn();
     }
 
     private Card GetPlayerCardMatchingSuggestion(Transform player)
@@ -334,7 +330,7 @@ public class SuggestionManager : MonoBehaviour
 
         Debug.Log(incorrectPlayer.name + " is eliminated from the game");
 
-        turnManager.NextTurn();
+        //turnManager.NextTurn();
 
         yield return new WaitForSeconds(2f);
 
