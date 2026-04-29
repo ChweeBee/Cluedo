@@ -4533,7 +4533,7 @@ MonoBehaviour:
   mainMenuPanel: {fileID: 1480034103}
   setupPanel: {fileID: 1710461819}
   loadPanel: {fileID: 986582118}
-  settingsSceneName: Settings
+  settingsSceneName: SettingsMenu
   boardSceneName: Board
 --- !u!1 &1460426262
 GameObject:

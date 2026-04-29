@@ -9,9 +9,25 @@ public class TurnManager : MonoBehaviour
     GameSaveData data;
     int currentIndex = 0;
 
+    readonly Dictionary<CharacterId, Transform> liveTransforms = new Dictionary<CharacterId, Transform>();
+
     public int CurrentIndex => currentIndex;
     public int PlayerCount => data != null ? data.players.Count : players.Count;
-    public IReadOnlyList<Transform> Players => players;
+
+    public IReadOnlyList<Transform> Players
+    {
+        get
+        {
+            if (data == null) return players;
+            var list = new List<Transform>(data.players.Count);
+            foreach (var p in data.players)
+            {
+                var t = ResolveTransform(p.character);
+                if (t != null) list.Add(t);
+            }
+            return list;
+        }
+    }
 
     public PlayerSetup CurrentSetup =>
         (data != null && data.players.Count > 0) ? data.players[currentIndex] : null;
@@ -53,6 +69,24 @@ public class TurnManager : MonoBehaviour
         Debug.Log($"[TurnManager] Turn 1: {CurrentPlayer.name}");
     }
 
+    public void RegisterSpawnedPlayers(IReadOnlyDictionary<CharacterId, Transform> spawned)
+    {
+        liveTransforms.Clear();
+        if (spawned == null) return;
+        foreach (var kv in spawned) liveTransforms[kv.Key] = kv.Value;
+    }
+
+    public void RecordPlayerTile(CharacterId character, Vector2Int tile)
+    {
+        if (data == null) return;
+        var setup = data.players.Find(p => p.character == character);
+        if (setup == null) return;
+
+        setup.tileX = tile.x;
+        setup.tileY = tile.y;
+        if (data.slotIndex >= 0) SaveSystem.Save(data.slotIndex, data);
+    }
+
     public void NextTurn()
     {
         int count = PlayerCount;
@@ -76,6 +110,7 @@ public class TurnManager : MonoBehaviour
 
     Transform ResolveTransform(CharacterId id)
     {
+        if (liveTransforms.TryGetValue(id, out var t) && t != null) return t;
         var go = GameObject.Find(id.ToString());
         return go != null ? go.transform : null;
     }

@@ -9,8 +9,13 @@ public class MenuController : MonoBehaviour
     [SerializeField] GameObject loadPanel;
 
     [Header("Scenes")]
-    [SerializeField] string settingsSceneName = "Settings";
+    [SerializeField] string settingsSceneName = "SettingsMenu";
     [SerializeField] string boardSceneName = "Board";
+
+    void Awake()
+    {
+        ClientSettings.EnsureExists();
+    }
 
     public void NewGame()
     {
