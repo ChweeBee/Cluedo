@@ -20,6 +20,8 @@ public class DiceManager : MonoBehaviour
 
     void Update()
     {
+        if (PauseManager.IsGamePaused) return;
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Debug.Log("Space detected");

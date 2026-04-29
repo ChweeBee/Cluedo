@@ -1,208 +1,117 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class TurnManager : MonoBehaviour
 {
+    [Header("Fallback (used when no save data is loaded)")]
     [SerializeField] List<Transform> players = new List<Transform>();
 
+    GameSaveData data;
     int currentIndex = 0;
-    bool gameEnded = false;
 
-    DiceManager _diceManager;
-    RoomManager _roomManager;
-    SuggestionManager _suggestionManager;
+    readonly Dictionary<CharacterId, Transform> liveTransforms = new Dictionary<CharacterId, Transform>();
 
-    public Transform CurrentPlayer => players.Count == 0 ? null : players[currentIndex];
     public int CurrentIndex => currentIndex;
-    public int PlayerCount => players.Count;
-    public IReadOnlyList<Transform> Players => players;
+    public int PlayerCount => data != null ? data.players.Count : players.Count;
 
-    DiceManager DiceManagerInstance
+    public IReadOnlyList<Transform> Players
     {
         get
         {
-            if (_diceManager == null)
-                _diceManager = FindAnyObjectByType<DiceManager>();
-
-            return _diceManager;
+            if (data == null) return players;
+            var list = new List<Transform>(data.players.Count);
+            foreach (var p in data.players)
+            {
+                var t = ResolveTransform(p.character);
+                if (t != null) list.Add(t);
+            }
+            return list;
         }
     }
 
-    RoomManager RoomManagerInstance
+    public PlayerSetup CurrentSetup =>
+        (data != null && data.players.Count > 0) ? data.players[currentIndex] : null;
+
+    public Transform CurrentPlayer
     {
         get
         {
-            if (_roomManager == null)
-                _roomManager = FindAnyObjectByType<RoomManager>();
-
-            return _roomManager;
-        }
-    }
-
-    SuggestionManager SuggestionManagerInstance
-    {
-        get
-        {
-            if (_suggestionManager == null)
-                _suggestionManager = FindAnyObjectByType<SuggestionManager>();
-
-            return _suggestionManager;
+            if (data != null && data.players.Count > 0)
+                return ResolveTransform(data.players[currentIndex].character);
+            return players.Count == 0 ? null : players[currentIndex];
         }
     }
 
     void Start()
     {
-        Debug.Log("[TurnManager] Initialized");
-    }
+        if (GameBootstrap.Instance != null
+            && GameBootstrap.Instance.Active != null
+            && GameBootstrap.Instance.Active.IsValid)
+        {
+            data = GameBootstrap.Instance.Active;
+            currentIndex = Mathf.Clamp(data.currentTurnIndex, 0, data.players.Count - 1);
 
-    public void StartGame()
-    {
-        Debug.Log("[TurnManager] Game started");
-        BeginTurn();
-    }
-
-    public void EndGame(string winner)
-    {
-        if (gameEnded) return;
-
-        gameEnded = true;
-        Debug.Log("GAME OVER - " + winner + " WINS");
-    }
-
-    public void BeginTurn()
-    {
-        if (gameEnded) return;
+            Debug.Log($"[TurnManager] Loaded {data.players.Count} players (slot {data.slotIndex + 1}). Turn order:");
+            for (int i = 0; i < data.players.Count; i++)
+            {
+                var p = data.players[i];
+                string marker = i == currentIndex ? " <-- current" : "";
+                Debug.Log($"  {i + 1}. {p.character} {(p.isCPU ? "(CPU)" : "(Human)")}{marker}");
+            }
+            return;
+        }
 
         if (players.Count == 0)
         {
-            Debug.LogError("[TurnManager] No players in the game");
-            EndGame("Nobody");
+            Debug.LogWarning("[TurnManager] No save data loaded and no fallback players assigned.");
             return;
         }
-
-        int activePlayers = 0;
-        Transform lastActivePlayer = null;
-
-        foreach (Transform player in players)
-        {
-            if (
-                player != null &&
-                GameManager.Instance != null &&
-                !GameManager.Instance.IsEliminated(player.name)
-            )
-            {
-                activePlayers++;
-                lastActivePlayer = player;
-            }
-        }
-
-        if (activePlayers == 0)
-        {
-            EndGame("Nobody");
-            return;
-        }
-
-        if (activePlayers == 1 && lastActivePlayer != null)
-        {
-            EndGame(lastActivePlayer.name);
-            return;
-        }
-
-        int attempts = 0;
-
-        while (
-            attempts < players.Count &&
-            CurrentPlayer != null &&
-            GameManager.Instance != null &&
-            GameManager.Instance.IsEliminated(CurrentPlayer.name)
-        )
-        {
-            AdvanceToNextTurn();
-            attempts++;
-        }
-
-        if (
-            CurrentPlayer == null ||
-            GameManager.Instance == null ||
-            GameManager.Instance.IsEliminated(CurrentPlayer.name)
-        )
-        {
-            EndGame("Nobody");
-            return;
-        }
-
-        if (DiceManagerInstance == null)
-        {
-            Debug.LogWarning("[TurnManager] DiceManager not found");
-            Invoke(nameof(BeginTurn), 0.5f);
-            return;
-        }
-
-        Debug.Log(CurrentPlayer.name + "'s TURN");
-
-        DiceManagerInstance.RollDice();
+        Debug.Log($"[TurnManager] Turn 1: {CurrentPlayer.name}");
     }
 
-    public void OnPlayerMoved()
+    public void RegisterSpawnedPlayers(IReadOnlyDictionary<CharacterId, Transform> spawned)
     {
-        if (gameEnded) return;
+        liveTransforms.Clear();
+        if (spawned == null) return;
+        foreach (var kv in spawned) liveTransforms[kv.Key] = kv.Value;
+    }
 
-        if (CurrentPlayer == null)
-        {
-            Debug.LogError("[TurnManager] CurrentPlayer is null");
-            NextTurn();
-            return;
-        }
+    public void RecordPlayerTile(CharacterId character, Vector2Int tile)
+    {
+        if (data == null) return;
+        var setup = data.players.Find(p => p.character == character);
+        if (setup == null) return;
 
-        string playerName = CurrentPlayer.name;
-
-        if (
-            GameManager.Instance != null &&
-            GameManager.Instance.IsEliminated(playerName)
-        )
-        {
-            NextTurn();
-            return;
-        }
-
-        if (RoomManagerInstance == null)
-        {
-            Debug.LogError("[TurnManager] RoomManager is missing");
-            NextTurn();
-            return;
-        }
-
-        Room currentRoom = RoomManagerInstance.GetPlayerRoom(playerName);
-
-        if (currentRoom != null)
-        {
-            if (SuggestionManagerInstance == null)
-            {
-                Debug.LogError("[TurnManager] SuggestionManager is missing");
-                NextTurn();
-                return;
-            }
-
-            SuggestionManagerInstance.StartSuggestion(playerName, currentRoom);
-        }
-        else
-        {
-            NextTurn();
-        }
+        setup.tileX = tile.x;
+        setup.tileY = tile.y;
+        if (data.slotIndex >= 0) SaveSystem.Save(data.slotIndex, data);
     }
 
     public void NextTurn()
     {
-        if (gameEnded) return;
+        int count = PlayerCount;
+        if (count == 0) return;
 
-        AdvanceToNextTurn();
-        BeginTurn();
+        currentIndex = (currentIndex + 1) % count;
+
+        if (data != null)
+        {
+            data.currentTurnIndex = currentIndex;
+            if (data.slotIndex >= 0) SaveSystem.Save(data.slotIndex, data);
+
+            var p = data.players[currentIndex];
+            Debug.Log($"[TurnManager] Turn -> {p.character} {(p.isCPU ? "(CPU)" : "(Human)")}");
+        }
+        else if (CurrentPlayer != null)
+        {
+            Debug.Log($"[TurnManager] Turn -> {CurrentPlayer.name}");
+        }
     }
 
-    void AdvanceToNextTurn()
+    Transform ResolveTransform(CharacterId id)
     {
-        if (players.Count == 0) return;
-
-        currentIndex = (currentIndex + 1) % players.Count;
+        if (liveTransforms.TryGetValue(id, out var t) && t != null) return t;
+        var go = GameObject.Find(id.ToString());
+        return go != null ? go.transform : null;
     }
 }

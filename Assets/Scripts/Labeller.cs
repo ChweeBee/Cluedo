@@ -49,6 +49,8 @@ public class Labeller : MonoBehaviour
 
     void ToggleLabels()
     {
+        if (PauseManager.IsGamePaused) return;
+
         if (Input.GetKeyDown(KeyCode.C) && lastToggleFrame != Time.frameCount)
         {
             labelsHidden = !labelsHidden;

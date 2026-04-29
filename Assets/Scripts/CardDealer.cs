@@ -37,6 +37,8 @@ public class CardDealer : MonoBehaviour
     }
     private void Update()
     {
+        if (PauseManager.IsGamePaused) return;
+
         if (Input.GetKeyDown(KeyCode.K))
         {
             DealHand(3);

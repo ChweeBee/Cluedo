@@ -62,6 +62,8 @@ public class UnitController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (PauseManager.IsGamePaused) return;
+
         if (Input.GetKeyDown(KeyCode.Escape) && unitSelected)
         {
             unitSelected = false;
@@ -178,11 +180,17 @@ public class UnitController : MonoBehaviour
 
         // Check room entry/exit
         Vector2Int finalCords = path[path.Count - 1].cords;
-        
+
         // TODO: fix properly
         if (roomManager != null)
         {
             roomManager.HandlePlayerMovement(selectedUnit.name, finalCords);
+        }
+
+        if (turnManager != null
+            && System.Enum.TryParse<CharacterId>(selectedUnit.name, out var charId))
+        {
+            turnManager.RecordPlayerTile(charId, finalCords);
         }
 
         // turn off walking animation
