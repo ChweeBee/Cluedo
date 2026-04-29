@@ -11,23 +11,31 @@ public class CardManager : MonoBehaviour
     public List<Card> weaponDeck = new List<Card>();
     public List<Card> roomDeck = new List<Card>();
 
+    private void Awake()
+    {
+        SortDeck();
+    }
+
     public void SortDeck()
     {
         suspectDeck.Clear();
         weaponDeck.Clear();
         roomDeck.Clear();
 
-        foreach (Card c in allCards)
+        foreach (Card card in allCards)
         {
-            if (c.cardType == Card.CardType.Suspect) suspectDeck.Add(c);
-            else if (c.cardType == Card.CardType.Weapon) weaponDeck.Add(c);
-            else if (c.cardType == Card.CardType.Room) roomDeck.Add(c);
+            if (card.cardType == Card.CardType.Suspect)
+                suspectDeck.Add(card);
+            else if (card.cardType == Card.CardType.Weapon)
+                weaponDeck.Add(card);
+            else if (card.cardType == Card.CardType.Room)
+                roomDeck.Add(card);
         }
-        Debug.Log("Cards sorted into Suspects, Weapons, and Rooms!");
-    }
 
-    private void Start()
-    {
-        SortDeck();
+        Debug.Log(
+            "Cards sorted. Suspects: " + suspectDeck.Count +
+            ", Weapons: " + weaponDeck.Count +
+            ", Rooms: " + roomDeck.Count
+        );
     }
 }
