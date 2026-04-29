@@ -55,7 +55,6 @@ public class Pathfinding : MonoBehaviour
 
     void BreadthFirstSearch(Vector2Int coordinates)
     {
-
         frontier.Clear();
         reached.Clear();
 

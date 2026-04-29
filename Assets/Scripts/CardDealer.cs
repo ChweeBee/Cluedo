@@ -84,6 +84,8 @@ public class CardDealer : MonoBehaviour
 
     private void Update()
     {
+        if (PauseManager.IsGamePaused) return;
+
         if (Input.GetKeyDown(KeyCode.K)) DealToAllPlayers();
 
         // H now strictly toggles visibility

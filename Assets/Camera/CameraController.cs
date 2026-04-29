@@ -41,12 +41,17 @@ public class CameraController : MonoBehaviour
         SetMode(startingMode);
     }
 
+    float EffectiveIdleAfterSeconds =>
+        ClientSettings.Instance != null ? ClientSettings.Instance.Data.idleAfterSeconds : idleAfterSeconds;
+
     void Update()
     {
+        if (PauseManager.IsGamePaused) return;
+
         bool inputThisFrame = DetectInput();
         if (inputThisFrame) lastInputTime = Time.time;
 
-        if (CurrentMode == CameraMode.Default && Time.time - lastInputTime >= idleAfterSeconds)
+        if (CurrentMode == CameraMode.Default && Time.time - lastInputTime >= EffectiveIdleAfterSeconds)
         {
             SetMode(CameraMode.Idle);
         }

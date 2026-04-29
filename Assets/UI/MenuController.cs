@@ -1,19 +1,57 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MenuController : MonoBehaviour
 {
+    [Header("Panels")]
+    [SerializeField] GameObject mainMenuPanel;
+    [SerializeField] GameObject setupPanel;
+    [SerializeField] GameObject loadPanel;
+
+    [Header("Scenes")]
+    [SerializeField] string settingsSceneName = "SettingsMenu";
+    [SerializeField] string boardSceneName = "Board";
+
+    void Awake()
+    {
+        ClientSettings.EnsureExists();
+    }
+
+    public void NewGame()
+    {
+        ShowOnly(setupPanel);
+    }
+
+    public void OpenLoad()
+    {
+        ShowOnly(loadPanel);
+    }
+
+    public void BackToMain()
+    {
+        ShowOnly(mainMenuPanel);
+    }
+
+    public void OpenSettings()
+    {
+        SceneManager.LoadScene(settingsSceneName);
+    }
+
     public void PlayGame()
     {
-        // Load the main game scene
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Board");
+        SceneManager.LoadScene(boardSceneName);
     }
 
     public void QuitGame()
     {
-        // Log a message to the console (useful for testing in the editor)
         Debug.Log("Quit Game");
-
-        // Quit the application
         Application.Quit();
+    }
+
+    void ShowOnly(GameObject panel)
+    {
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(panel == mainMenuPanel);
+        if (setupPanel != null) setupPanel.SetActive(panel == setupPanel);
+        if (loadPanel != null) loadPanel.SetActive(panel == loadPanel);
     }
 }
