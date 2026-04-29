@@ -45,10 +45,10 @@ public class SuggestionManager : MonoBehaviour
 
     void Start()
     {
-        if (turnManager == null) turnManager = FindObjectOfType<TurnManager>();
-        if (cardManager == null) cardManager = FindObjectOfType<CardManager>();
-        if (roomManager == null) roomManager = FindObjectOfType<RoomManager>();
-        if (envelope == null) envelope = FindObjectOfType<Envelope>();
+        if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
+        if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
+        if (roomManager == null) roomManager = FindAnyObjectByType<RoomManager>();
+        if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
 
         if (suggestionPanel != null) suggestionPanel.SetActive(false);
         if (accusationPanel != null) accusationPanel.SetActive(false);

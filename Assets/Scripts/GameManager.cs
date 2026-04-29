@@ -59,13 +59,13 @@ public class GameManager : MonoBehaviour
     
     void Start()
     {
-        if (turnManager == null) turnManager = FindObjectOfType<TurnManager>();
-        if (diceManager == null) diceManager = FindObjectOfType<DiceManager>();
-        if (cardDealer == null) cardDealer = FindObjectOfType<CardDealer>();
-        if (cardManager == null) cardManager = FindObjectOfType<CardManager>();
-        if (suggestionManager == null) suggestionManager = FindObjectOfType<SuggestionManager>();
-        if (unitController == null) unitController = FindObjectOfType<UnitController>();
-        if (envelope == null) envelope = FindObjectOfType<Envelope>();
+        if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
+        if (diceManager == null) diceManager = FindAnyObjectByType<DiceManager>();
+        if (cardDealer == null) cardDealer = FindAnyObjectByType<CardDealer>();
+        if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
+        if (suggestionManager == null) suggestionManager = FindAnyObjectByType<SuggestionManager>();
+        if (unitController == null) unitController = FindAnyObjectByType<UnitController>();
+        if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
         
         if (showEnvelopeButton != null)
         {
@@ -102,28 +102,9 @@ public class GameManager : MonoBehaviour
             cardManager.SortDeck();
         }
         
-        foreach (Transform player in turnManager.Players)
-        {
-            CardHolder cardHolder = player.GetComponent<CardHolder>();
-            if (cardHolder == null) cardHolder = player.gameObject.AddComponent<CardHolder>();
-            
-            if (cardHolder.playerHand == null)
-            {
-                GameObject handContainer = new GameObject($"{player.name}_Hand");
-                Canvas canvas = FindObjectOfType<Canvas>();
-                if (canvas != null) handContainer.transform.SetParent(canvas.transform);
-                cardHolder.playerHand = handContainer.transform;
-            }
-            
-            Transform originalHand = cardDealer.playerHand;
-            cardDealer.playerHand = cardHolder.playerHand;
-            cardDealer.DealHand(cardsPerPlayer);
-            cardDealer.playerHand = originalHand;
-            
-            Debug.Log($"Dealt {cardsPerPlayer} cards to {player.name}");
-            yield return null;
-        }
-        
+        cardDealer.DealToAllPlayers();
+        yield return null;
+
         Debug.Log($"Finished dealing. Cards remaining: {cardManager.allCards.Count}");
     }
     
