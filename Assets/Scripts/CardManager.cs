@@ -11,6 +11,9 @@ public class CardManager : MonoBehaviour
     public List<Card> weaponDeck = new List<Card>();
     public List<Card> roomDeck = new List<Card>();
 
+    [Header("The Winning Combo")]
+    public List<Card> winningEnvelope = new List<Card>();
+
     private void Awake()
     {
         SortDeck();
