@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 public class CardDealer : MonoBehaviour
@@ -9,14 +10,36 @@ public class CardDealer : MonoBehaviour
 
     private bool hasDealt = false;
 
+    private void Start()
+    {
+        StartCoroutine(DealNextFrame());
+    }
+
+    private IEnumerator DealNextFrame()
+    {
+        yield return null;
+        DealToAllPlayers();
+    }
+
     public void DealToAllPlayers()
     {
         if (hasDealt) { Debug.Log("Cards already dealt"); return; }
-        hasDealt = true;
 
         CluedoPlayer[] allPlayers = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
         if (allPlayers.Length == 0) { Debug.LogError("No Players found in scene"); return; }
 
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+
+        if (save != null && save.cardsDealt && HasAnySavedHands(save))
+        {
+            RestoreSavedHands(save, allPlayers);
+            hasDealt = true;
+            HideAllHands();
+            Debug.Log($"Restored saved hands for {allPlayers.Length} players.");
+            return;
+        }
+
+        hasDealt = true;
         PickWinners();
 
         List<Card> remainingCards = new List<Card>();
@@ -25,7 +48,6 @@ public class CardDealer : MonoBehaviour
             if (!cardManager.winningEnvelope.Contains(c)) remainingCards.Add(c);
         }
 
-        // Shuffle
         for (int i = 0; i < remainingCards.Count; i++)
         {
             Card temp = remainingCards[i];
@@ -34,7 +56,6 @@ public class CardDealer : MonoBehaviour
             remainingCards[randomIndex] = temp;
         }
 
-        // Round-robin internal data assignment
         int playerIndex = 0;
         foreach (Card card in remainingCards)
         {
@@ -42,9 +63,63 @@ public class CardDealer : MonoBehaviour
             playerIndex = (playerIndex + 1) % allPlayers.Length;
         }
 
-        // Initially show Player 1's hand
+        PersistDealtHands(save, allPlayers);
+
         ShowHandByIndex(0);
-        Debug.Log($"Dealt 18 cards across {allPlayers.Length} players.");
+        Debug.Log($"Dealt {remainingCards.Count} cards across {allPlayers.Length} players.");
+    }
+
+    bool HasAnySavedHands(GameSaveData save)
+    {
+        if (save == null || save.players == null) return false;
+        foreach (PlayerSetup p in save.players)
+        {
+            if (p != null && p.handCardNames != null && p.handCardNames.Count > 0) return true;
+        }
+        return false;
+    }
+
+    void RestoreSavedHands(GameSaveData save, CluedoPlayer[] allPlayers)
+    {
+        foreach (CluedoPlayer cp in allPlayers) cp.hand.Clear();
+
+        for (int i = 0; i < allPlayers.Length && i < save.players.Count; i++)
+        {
+            PlayerSetup setup = save.players[i];
+            if (setup == null || setup.handCardNames == null) continue;
+
+            foreach (string cardName in setup.handCardNames)
+            {
+                Card card = FindCardByName(cardName);
+                if (card != null) allPlayers[i].hand.Add(card);
+            }
+        }
+    }
+
+    void PersistDealtHands(GameSaveData save, CluedoPlayer[] allPlayers)
+    {
+        if (save == null || save.slotIndex < 0) return;
+
+        for (int i = 0; i < allPlayers.Length && i < save.players.Count; i++)
+        {
+            PlayerSetup setup = save.players[i];
+            if (setup == null) continue;
+
+            setup.handCardNames.Clear();
+            foreach (Card c in allPlayers[i].hand)
+            {
+                if (c != null) setup.handCardNames.Add(c.cardName);
+            }
+        }
+
+        save.cardsDealt = true;
+        SaveSystem.Save(save.slotIndex, save);
+    }
+
+    Card FindCardByName(string name)
+    {
+        if (cardManager == null || string.IsNullOrEmpty(name)) return null;
+        return cardManager.allCards.Find(c => c != null && c.cardName == name);
     }
 
     void PickWinners()
@@ -76,23 +151,24 @@ public class CardDealer : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerHand.GetComponent<RectTransform>());
     }
 
-    // THE MASTER TOGGLE: Simply hides or shows the playerHand object
-    public void ToggleAllHands()
+    // Hide-only: H always hides the hand, never reveals it.
+    public void HideAllHands()
     {
-        playerHand.gameObject.SetActive(!playerHand.gameObject.activeSelf);
+        if (playerHand != null) playerHand.gameObject.SetActive(false);
     }
 
     private void Update()
     {
         if (PauseManager.IsGamePaused) return;
 
-        if (Input.GetKeyDown(KeyCode.K)) DealToAllPlayers();
-
-        // H now strictly toggles visibility
-        if (Input.GetKeyDown(KeyCode.H)) ToggleAllHands();
+        if (Input.GetKeyDown(KeyCode.H)) HideAllHands();
 
         // 1 and 2 now trigger the "Refill UI" logic
         if (Input.GetKeyDown(KeyCode.Alpha1)) ShowHandByIndex(0);
         if (Input.GetKeyDown(KeyCode.Alpha2)) ShowHandByIndex(1);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) ShowHandByIndex(2);
+        if (Input.GetKeyDown(KeyCode.Alpha4)) ShowHandByIndex(3);
+        if (Input.GetKeyDown(KeyCode.Alpha5)) ShowHandByIndex(4);
+        if (Input.GetKeyDown(KeyCode.Alpha6)) ShowHandByIndex(5);
     }
 }

@@ -51,29 +51,53 @@ public class Envelope : MonoBehaviour
             Debug.LogError("CardManager not found!");
             return;
         }
-        
-        // Make sure decks are sorted
+
         cardManager.SortDeck();
-        
-        // Pick random cards from each deck for the solution
-        if (cardManager.suspectDeck.Count > 0)
-            suspectCard = cardManager.suspectDeck[Random.Range(0, cardManager.suspectDeck.Count)];
-        
-        if (cardManager.weaponDeck.Count > 0)
-            weaponCard = cardManager.weaponDeck[Random.Range(0, cardManager.weaponDeck.Count)];
-        
-        if (cardManager.roomDeck.Count > 0)
-            roomCard = cardManager.roomDeck[Random.Range(0, cardManager.roomDeck.Count)];
-        
-        // Remove solution cards from allCards so they're not dealt to players
+
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+        EnvelopeSolution saved = save != null ? save.envelope : null;
+
+        if (saved != null && saved.IsValid)
+        {
+            suspectCard = FindCardByName(cardManager.suspectDeck, saved.suspectCardName);
+            weaponCard = FindCardByName(cardManager.weaponDeck, saved.weaponCardName);
+            roomCard = FindCardByName(cardManager.roomDeck, saved.roomCardName);
+            Debug.Log($"Envelope restored from save: {suspectCard?.cardName} with {weaponCard?.cardName} in the {roomCard?.cardName}");
+        }
+        else
+        {
+            if (cardManager.suspectDeck.Count > 0)
+                suspectCard = cardManager.suspectDeck[Random.Range(0, cardManager.suspectDeck.Count)];
+            if (cardManager.weaponDeck.Count > 0)
+                weaponCard = cardManager.weaponDeck[Random.Range(0, cardManager.weaponDeck.Count)];
+            if (cardManager.roomDeck.Count > 0)
+                roomCard = cardManager.roomDeck[Random.Range(0, cardManager.roomDeck.Count)];
+
+            if (save != null && save.slotIndex >= 0)
+            {
+                save.envelope = new EnvelopeSolution
+                {
+                    suspectCardName = suspectCard != null ? suspectCard.cardName : null,
+                    weaponCardName = weaponCard != null ? weaponCard.cardName : null,
+                    roomCardName = roomCard != null ? roomCard.cardName : null
+                };
+                SaveSystem.Save(save.slotIndex, save);
+            }
+
+            Debug.Log($"Envelope initialized: {suspectCard?.cardName} with {weaponCard?.cardName} in the {roomCard?.cardName}");
+        }
+
         if (suspectCard != null) cardManager.allCards.Remove(suspectCard);
         if (weaponCard != null) cardManager.allCards.Remove(weaponCard);
         if (roomCard != null) cardManager.allCards.Remove(roomCard);
-        
-        // Resort the deck after removing solution cards
+
         cardManager.SortDeck();
-        
-        Debug.Log($"Envelope initialized: {suspectCard?.cardName} with {weaponCard?.cardName} in the {roomCard?.cardName}");
+    }
+
+    private static Card FindCardByName(List<Card> deck, string name)
+    {
+        if (deck == null || string.IsNullOrEmpty(name)) return null;
+        return deck.Find(c => c != null && c.cardName == name);
     }
     
     public void RevealEnvelope()

@@ -6,6 +6,7 @@ public class DiceManager : MonoBehaviour
     [SerializeField] DiceRoller dice1;
     [SerializeField] DiceRoller dice2;
     [SerializeField] DiceCamera diceCamera;
+    [SerializeField] CameraController cameraController;
     [Tooltip("Seconds the dice cameras stay visible after both dice settle.")]
     [SerializeField] float diceCameraHoldSeconds = 3f;
 
@@ -16,6 +17,7 @@ public class DiceManager : MonoBehaviour
     void Start()
     {
         Debug.Log("DiceManager started");
+        if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
     }
 
     void Update()
@@ -27,7 +29,7 @@ public class DiceManager : MonoBehaviour
             Debug.Log("Space detected");
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && !rolling)
+        if (Input.GetKeyDown(KeyCode.Space) && !rolling && totalResult <= 0)
         {
             Debug.Log("Rolling dice...");
             RollDice();
@@ -49,10 +51,21 @@ public class DiceManager : MonoBehaviour
     {
         yield return new WaitForSeconds(diceCameraHoldSeconds);
         if (diceCamera != null) diceCamera.Hide();
+        if (cameraController != null)
+        {
+            cameraController.SetMode(CameraController.CameraMode.Default);
+            cameraController.ResetIdleTimer();
+        }
     }
 
     public void RollDice()
     {
+        if (rolling || totalResult > 0)
+        {
+            Debug.Log("Dice already rolled this turn; ignoring roll request.");
+            return;
+        }
+
         rolling = true;
         totalResult = 0;
 
@@ -60,5 +73,11 @@ public class DiceManager : MonoBehaviour
         dice1.StartRoll();
         dice2.StartRoll();
         if (diceCamera != null) diceCamera.Show(dice1.transform, dice2.transform);
+    }
+
+    public void ApplySavedRoll(int total)
+    {
+        rolling = false;
+        totalResult = total;
     }
 }

@@ -88,6 +88,12 @@ public class CameraController : MonoBehaviour
         lastInputTime = Time.time;
     }
 
+    public void ResetIdleTimer()
+    {
+        lastInputTime = Time.time;
+        lastMousePosition = Input.mousePosition;
+    }
+
     public void BeginMove(Transform target)
     {
         if (target == null) return;

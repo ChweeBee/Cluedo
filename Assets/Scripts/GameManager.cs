@@ -161,8 +161,22 @@ public class GameManager : MonoBehaviour
         SetState(GameState.WaitingForRoll);
         UpdateTurnUI();
 
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+        int savedRoll = save != null ? save.lastDiceTotal : 0;
+
         if (diceManager != null)
-            diceManager.RollDice();
+        {
+            if (savedRoll > 0)
+            {
+                diceManager.ApplySavedRoll(savedRoll);
+                if (rollResultText != null)
+                    rollResultText.text = "Rolled: " + savedRoll + "\nMove your character.";
+            }
+            else
+            {
+                diceManager.totalResult = 0;
+            }
+        }
     }
 
     private void HandleRollPhase()
@@ -171,6 +185,7 @@ public class GameManager : MonoBehaviour
 
         if (diceManager.totalResult <= 0) return;
 
+        PersistDiceTotal(diceManager.totalResult);
         SetState(GameState.WaitingForMove);
 
         if (rollResultText != null)
@@ -211,8 +226,20 @@ public class GameManager : MonoBehaviour
     {
         if (currentState == GameState.GameOver) return;
 
+        PersistDiceTotal(0);
         turnManager.NextTurn();
         BeginTurn();
+    }
+
+    private void PersistDiceTotal(int total)
+    {
+        if (GameBootstrap.Instance == null) return;
+        GameSaveData save = GameBootstrap.Instance.Active;
+        if (save == null || save.slotIndex < 0) return;
+        if (save.lastDiceTotal == total) return;
+
+        save.lastDiceTotal = total;
+        SaveSystem.Save(save.slotIndex, save);
     }
 
     public void OnSuggestionFinished()
@@ -354,7 +381,7 @@ private IEnumerator DelayBeforeNextTurn()
             turnText.text = turnManager.CurrentPlayer.name + "'s Turn";
 
         if (rollResultText != null)
-            rollResultText.text = "Rolling dice...";
+            rollResultText.text = "Press Space to roll";
     }
 
     private void SetState(GameState newState)
