@@ -304,21 +304,22 @@ public void StartSuggestion(string playerName, Room room)
         //turnManager.NextTurn();
     }
 
-    private Card GetPlayerCardMatchingSuggestion(Transform player)
-    {
-        CardHolder cardHolder = player.GetComponent<CardHolder>();
+private Card GetPlayerCardMatchingSuggestion(Transform player)
+{
+    CluedoPlayer cluedoPlayer = player.GetComponent<CluedoPlayer>();
 
-        if (cardHolder == null || cardHolder.playerHand == null)
-            return null;
-
-        foreach (Card card in cardHolder.playerHand.GetComponentsInChildren<Card>())
-        {
-            if (card == suggestedSuspect || card == suggestedWeapon || card == suggestedRoom)
-                return card;
-        }
-
+    if (cluedoPlayer == null || cluedoPlayer.hand == null)
         return null;
+
+    foreach (Card card in cluedoPlayer.hand)
+    {
+        if (card == suggestedSuspect || card == suggestedWeapon || card == suggestedRoom)
+            return card;
     }
+
+    return null;
+}
+
 
     private void ShowCardToPlayer(Card card, Transform player)
     {
@@ -348,7 +349,7 @@ public void StartSuggestion(string playerName, Room room)
     /*
 
     Obselete
-    
+
     private void GameOver(bool playerWon, Transform winner)
     {
         gameOver = true;
