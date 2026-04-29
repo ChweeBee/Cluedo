@@ -20,8 +20,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Envelope envelope;
     
     [Header("Game Settings")]
-    [SerializeField] private int cardsPerPlayer = 3;
-    [SerializeField] private float postRollDelay = 1f;
     [SerializeField] private float postMoveDelay = 1f;
     [SerializeField] private float postSuggestionDelay = 2f;
     
@@ -33,7 +31,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Text gameOverText;
     [SerializeField] private Button showEnvelopeButton;
     
-    private bool waitingForRoll = true;
     private bool waitingForMove = false;
     private bool gamePaused = false;
     
@@ -130,7 +127,6 @@ public class GameManager : MonoBehaviour
     {
         if (diceManager.totalResult > 0)
         {
-            waitingForRoll = false;
             waitingForMove = true;
             currentState = GameState.WaitingForMove;
             UpdateRollUI(diceManager.totalResult);
@@ -143,7 +139,6 @@ public class GameManager : MonoBehaviour
         if (waitingForMove && diceManager.totalResult == 0)
         {
             waitingForMove = false;
-            waitingForRoll = true;
             StartCoroutine(DelayBeforeNextTurn());
         }
     }
@@ -154,11 +149,10 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(postMoveDelay);
         currentState = GameState.WaitingForRoll;
         UpdateTurnUI();
-        waitingForRoll = true;
         waitingForMove = false;
         gamePaused = false;
     }
-    
+
     public void OnSuggestionMade()
     {
         if (currentState == GameState.WaitingForMove)
@@ -173,7 +167,6 @@ public class GameManager : MonoBehaviour
         gamePaused = true;
         yield return new WaitForSeconds(postSuggestionDelay);
         currentState = GameState.WaitingForRoll;
-        waitingForRoll = true;
         waitingForMove = false;
         if (turnManager != null) { turnManager.NextTurn(); UpdateTurnUI(); }
         gamePaused = false;
@@ -196,7 +189,6 @@ public class GameManager : MonoBehaviour
         else
         {
             currentState = GameState.WaitingForRoll;
-            waitingForRoll = true;
             waitingForMove = false;
             UpdateTurnUI();
         }
