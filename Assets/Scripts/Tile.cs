@@ -67,9 +67,6 @@ public class Tile : MonoBehaviour
     private void SetCords()
     {
         gridManager = FindAnyObjectByType<GridManager>();
-        int x = (int)transform.position.x;
-        int z = (int)transform.position.z;
-
-        cords = new Vector2Int(x / gridManager.UnityGridSize, z / gridManager.UnityGridSize);
+        cords = gridManager.GetCoordinatesFromPosition(transform.position);
     }
 }

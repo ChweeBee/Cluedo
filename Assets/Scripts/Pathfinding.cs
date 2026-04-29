@@ -91,6 +91,8 @@ public class Pathfinding : MonoBehaviour
         List<Vector2Int> seeds = GetSeedTiles(coordinates);
         if (seeds.Count == 0) return;
 
+        HashSet<Vector2Int> seedSet = new HashSet<Vector2Int>(seeds);
+
         foreach (Vector2Int s in seeds)
         {
             if (reached.ContainsKey(s)) continue;
@@ -101,7 +103,8 @@ public class Pathfinding : MonoBehaviour
         while (frontier.Count > 0 && isRunning == true)
         {
             currentNode = frontier.Dequeue();
-            currentNode.explored = true;
+            if (!seedSet.Contains(currentNode.cords))
+                currentNode.explored = true;
             ExploreNeighbours();
 
             if (currentNode.cords == targetCords)
@@ -176,7 +179,6 @@ public void MarkReachable(Vector2Int origin, int maxSteps)
         if (visited.Contains(s)) continue;
         visited.Add(s);
         queue.Enqueue(new KeyValuePair<Vector2Int, int>(s, 0));
-        grid[s].explored = true;
     }
 
     while (queue.Count > 0)
