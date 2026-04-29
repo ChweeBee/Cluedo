@@ -5801,7 +5801,7 @@ MonoBehaviour:
   rowContainer: {fileID: 1618213949}
   addPlayerButton: {fileID: 1796626854}
   minPlayers: 2
-  maxPlayers: 6
+  maxPlayers: 8
   saveSlotDropdown: {fileID: 1090587405}
   startGameButton: {fileID: 1317042360}
   backButton: {fileID: 646894520}

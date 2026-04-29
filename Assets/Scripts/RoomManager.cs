@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class RoomManager : MonoBehaviour
 {
     [SerializeField] private List<Room> rooms;
-
+    [SerializeField] private Room room;
     private static readonly Dictionary<Room.RoomType, Room.RoomType> SecretPassages = new Dictionary<Room.RoomType, Room.RoomType>
     {
         { Room.RoomType.Kitchen, Room.RoomType.Study },
