@@ -59771,6 +59771,14 @@ PrefabInstance:
       propertyPath: m_TagString
       value: CameraPOI
       objectReference: {fileID: 0}
+    - target: {fileID: 7967635073135477711, guid: 94fb8d76235cc4a4fabe4ac7df93c717, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7906386799813675487, guid: 31fc8cbe82b70ba4ca86014d7df73c1d, type: 3}
+    - target: {fileID: 9085840581543959108, guid: 94fb8d76235cc4a4fabe4ac7df93c717, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9abe2fd5ca1d3a54f9dee084d0e2d7a0, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -59824,6 +59832,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5654996334095910433, guid: 75ffe405225ec4182a5ecde28e2602b3, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7906386799813675487, guid: 31fc8cbe82b70ba4ca86014d7df73c1d, type: 3}
     - target: {fileID: 7860489735377197339, guid: 75ffe405225ec4182a5ecde28e2602b3, type: 3}
       propertyPath: m_Name
       value: Dice2
@@ -59836,6 +59848,10 @@ PrefabInstance:
       propertyPath: m_TagString
       value: CameraPOI
       objectReference: {fileID: 0}
+    - target: {fileID: 8921422721555827171, guid: 75ffe405225ec4182a5ecde28e2602b3, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9abe2fd5ca1d3a54f9dee084d0e2d7a0, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
