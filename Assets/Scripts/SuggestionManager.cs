@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
@@ -14,20 +15,20 @@ public class SuggestionManager : MonoBehaviour
 
     [Header("Suggestion UI")]
     [SerializeField] private GameObject suggestionPanel;
-    [SerializeField] private Dropdown suspectDropdown;
-    [SerializeField] private Dropdown weaponDropdown;
+    [SerializeField] private TMP_Dropdown suspectDropdown;
+    [SerializeField] private TMP_Dropdown weaponDropdown;
     [SerializeField] private Button suggestButton;
     [SerializeField] private Button cancelButton;
-    [SerializeField] private Text suggestionResultText;
+    [SerializeField] private TMP_Text suggestionResultText;
 
     [Header("Accusation UI")]
     [SerializeField] private GameObject accusationPanel;
-    [SerializeField] private Dropdown accuseSuspectDropdown;
-    [SerializeField] private Dropdown accuseWeaponDropdown;
-    [SerializeField] private Dropdown accuseRoomDropdown;
+    [SerializeField] private TMP_Dropdown accuseSuspectDropdown;
+    [SerializeField] private TMP_Dropdown accuseWeaponDropdown;
+    [SerializeField] private TMP_Dropdown accuseRoomDropdown;
     [SerializeField] private Button accuseButton;
     [SerializeField] private Button cancelAccuseButton;
-    [SerializeField] private Text accusationResultText;
+    [SerializeField] private TMP_Text accusationResultText;
 
     [Header("Envelope UI")]
     [SerializeField] private Button showEnvelopeButton;
@@ -42,6 +43,19 @@ public class SuggestionManager : MonoBehaviour
     private Card suggestedSuspect;
     private Card suggestedWeapon;
     private Card suggestedRoom;
+
+    void Awake()
+    {
+        if (suggestionPanel != null) suggestionPanel.SetActive(false);
+        if (accusationPanel != null) accusationPanel.SetActive(false);
+        ClearResultTexts();
+    }
+
+    public void ClearResultTexts()
+    {
+        if (suggestionResultText != null) suggestionResultText.text = string.Empty;
+        if (accusationResultText != null) accusationResultText.text = string.Empty;
+    }
 
     void Start()
     {
@@ -59,13 +73,13 @@ public class SuggestionManager : MonoBehaviour
             suggestButton.onClick.AddListener(MakeSuggestion);
 
         if (cancelButton != null)
-            cancelButton.onClick.AddListener(() => suggestionPanel.SetActive(false));
+            cancelButton.onClick.AddListener(CancelSuggestion);
 
         if (accuseButton != null)
             accuseButton.onClick.AddListener(MakeAccusation);
 
         if (cancelAccuseButton != null)
-            cancelAccuseButton.onClick.AddListener(() => accusationPanel.SetActive(false));
+            cancelAccuseButton.onClick.AddListener(CancelAccusation);
 
         if (showEnvelopeButton != null)
         {
@@ -225,26 +239,50 @@ public void StartSuggestion(string playerName, Room room)
 
         bool isCorrect = envelope != null && envelope.CheckAccusation(accusedSuspect, accusedWeapon, accusedRoom);
 
+        string accuserName = turnManager.CurrentPlayer.name;
+
+        if (accusationPanel != null) accusationPanel.SetActive(false);
+
         if (isCorrect)
         {
-            Debug.Log(turnManager.CurrentPlayer.name + " made a correct accusation");
+            Debug.Log("[SuggestionManager] " + accuserName + " made a CORRECT accusation");
 
             if (accusationResultText != null)
-                accusationResultText.text = "CORRECT! " + turnManager.CurrentPlayer.name + " wins!";
+                accusationResultText.text = "CORRECT! " + accuserName + " wins!";
 
-            GameManager.Instance.OnAccusationMade(true, turnManager.CurrentPlayer.name);
+            GameManager.Instance.OnAccusationMade(true, accuserName);
         }
         else
         {
-            Debug.Log(turnManager.CurrentPlayer.name + " made an incorrect accusation");
+            Debug.Log("[SuggestionManager] " + accuserName + " made an INCORRECT accusation -> eliminating");
 
             if (accusationResultText != null)
-                accusationResultText.text = "INCORRECT! " + turnManager.CurrentPlayer.name + " is out!";
+                accusationResultText.text = "INCORRECT! " + accuserName + " is out!";
 
-            StartCoroutine(HandleIncorrectAccusation());
+            GameManager.Instance.OnAccusationMade(false, accuserName);
         }
+    }
 
-        StartCoroutine(CloseAccusationPanelAfterDelay(3f));
+    private void CancelSuggestion()
+    {
+        if (suggestionPanel != null) suggestionPanel.SetActive(false);
+        ReturnToPostMoveActions();
+    }
+
+    private void CancelAccusation()
+    {
+        if (accusationPanel != null) accusationPanel.SetActive(false);
+        ReturnToPostMoveActions();
+    }
+
+    private void ReturnToPostMoveActions()
+    {
+        if (GameManager.Instance == null) return;
+        if (GameManager.Instance.CurrentState == GameManager.GameState.SuggestionPhase ||
+            GameManager.Instance.CurrentState == GameManager.GameState.AccusationPhase)
+        {
+            GameManager.Instance.ReturnToPostMove();
+        }
     }
 
     private Card GetCardFromDropdownValue(int dropdownValue, List<Card> deckCards, Card envelopeCard)
@@ -301,7 +339,9 @@ public void StartSuggestion(string playerName, Room room)
         isWaitingForSuggestionResponse = false;
 
         yield return new WaitForSeconds(1f);
-        //turnManager.NextTurn();
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnSuggestionFinished();
     }
 
 private Card GetPlayerCardMatchingSuggestion(Transform player)

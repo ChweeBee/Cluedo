@@ -31,11 +31,15 @@ public class Envelope : MonoBehaviour
     public Card RoomCard => roomCard;
     public bool IsRevealed => isRevealed;
     
+    void Awake()
+    {
+        if (envelopePanel != null) envelopePanel.SetActive(false);
+    }
+
     void Start()
     {
         if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
-        
-        // Setup UI
+
         if (envelopePanel != null) envelopePanel.SetActive(false);
         
         if (revealButton != null) revealButton.onClick.AddListener(RevealEnvelope);

@@ -67,7 +67,7 @@ public class CardDealer : MonoBehaviour
 
         PersistDealtHands(save, allPlayers);
 
-        ShowHandByIndex(0);
+        HideAllHands();
         Debug.Log($"Dealt {remainingCards.Count} cards across {allPlayers.Length} players.");
     }
 

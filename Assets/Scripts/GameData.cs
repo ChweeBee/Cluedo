@@ -70,5 +70,8 @@ public class GameSaveData
     // The envelope solution chosen at game start, persisted so it stays the same across reloads.
     public EnvelopeSolution envelope = new EnvelopeSolution();
 
+    // Names of players (CluedoPlayer transforms / CharacterId names) that have been eliminated by a wrong accusation.
+    public List<string> eliminatedPlayerNames = new List<string>();
+
     public bool IsValid => players != null && players.Count >= 2;
 }

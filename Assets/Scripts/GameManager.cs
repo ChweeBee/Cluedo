@@ -24,7 +24,6 @@ public class GameManager : MonoBehaviour
 
     private bool isGameActive = true;
     private bool gamePaused = false;
-    private bool waitingForRoll = true;
     private bool waitingForMove = false;
 
     [Header("State")]
@@ -72,6 +71,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         FindReferences();
+        RestoreEliminations();
 
         if (showEnvelopeButton != null)
         {
@@ -220,6 +220,8 @@ public class GameManager : MonoBehaviour
     public void EndCurrentTurn()
     {
         if (currentState == GameState.GameOver) return;
+
+        if (suggestionManager != null) suggestionManager.ClearResultTexts();
 
         PersistTurnState(0, false);
         turnManager.NextTurn();
@@ -387,7 +389,16 @@ public class GameManager : MonoBehaviour
 
     public void OnSuggestionFinished()
     {
-        EndCurrentTurn();
+        ReturnToPostMove();
+    }
+
+    public void ReturnToPostMove()
+    {
+        if (currentState == GameState.GameOver) return;
+
+        SetState(GameState.PostMoveActions);
+        if (rollResultText != null)
+            rollResultText.text = BuildAlreadyMovedText();
     }
 
     public void OnAccusationMade(bool correct, string playerName)
@@ -417,7 +428,64 @@ public class GameManager : MonoBehaviour
         if (eliminatedPlayers.Contains(playerName)) return;
 
         eliminatedPlayers.Add(playerName);
+
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+        if (save != null)
+        {
+            if (save.eliminatedPlayerNames == null)
+                save.eliminatedPlayerNames = new System.Collections.Generic.List<string>();
+            if (!save.eliminatedPlayerNames.Contains(playerName))
+                save.eliminatedPlayerNames.Add(playerName);
+            if (save.slotIndex >= 0)
+                SaveSystem.Save(save.slotIndex, save);
+        }
+
+        HideUnit(FindUnitByName(playerName));
+
         Debug.Log("[GameManager] " + playerName + " has been eliminated.");
+    }
+
+    private void RestoreEliminations()
+    {
+        eliminatedPlayers.Clear();
+
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+        if (save != null && save.eliminatedPlayerNames != null)
+        {
+            foreach (string name in save.eliminatedPlayerNames)
+            {
+                if (!string.IsNullOrEmpty(name))
+                    eliminatedPlayers.Add(name);
+            }
+        }
+
+        if (turnManager != null)
+        {
+            foreach (Transform p in turnManager.Players)
+            {
+                if (p != null && eliminatedPlayers.Contains(p.name))
+                    HideUnit(p);
+            }
+        }
+    }
+
+    private Transform FindUnitByName(string playerName)
+    {
+        if (turnManager == null) return null;
+        foreach (Transform p in turnManager.Players)
+        {
+            if (p != null && p.name == playerName) return p;
+        }
+        return null;
+    }
+
+    private void HideUnit(Transform unit)
+    {
+        if (unit == null) return;
+        foreach (Renderer r in unit.GetComponentsInChildren<Renderer>(true))
+            r.enabled = false;
+        foreach (Collider c in unit.GetComponentsInChildren<Collider>(true))
+            c.enabled = false;
     }
 
     public bool CheckAccusation(string suspect, string weapon, string room)
@@ -469,7 +537,6 @@ public class GameManager : MonoBehaviour
     if (waitingForMove && diceManager.totalResult == 0)
     {
         waitingForMove = false;
-        waitingForRoll = true;
 
         StartCoroutine(DelayBeforeNextTurn());
     }
@@ -484,7 +551,6 @@ private IEnumerator DelayBeforeNextTurn()
     currentState = GameState.WaitingForRoll;
     UpdateTurnUI();
 
-    waitingForRoll = true;
     waitingForMove = false;
     gamePaused = false;
 }
