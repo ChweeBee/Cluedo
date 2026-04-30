@@ -8,13 +8,17 @@ public class CardDealer : MonoBehaviour
     public CardManager cardManager;
     public Transform playerHand; // This is your main UI container
     public Transform PublicHand;  // Optional UI container for the leftover "table" cards
+    public GameObject cardCanvas; // Hidden when the camera enters Idle mode
+    public CameraController cameraController;
 
     private bool hasDealt = false;
+    private readonly List<Card> publicCards = new List<Card>();
 
     public bool IsHandVisible => playerHand != null && playerHand.gameObject.activeSelf;
 
     private void Start()
     {
+        if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
         StartCoroutine(DealNextFrame());
     }
 
@@ -65,10 +69,7 @@ public class CardDealer : MonoBehaviour
         int cardsPerPlayer = PublicHand != null ? remainingCards.Count / playerCount : remainingCards.Count;
         int totalFairCards = PublicHand != null ? cardsPerPlayer * playerCount : remainingCards.Count;
 
-        if (PublicHand != null)
-        {
-            foreach (Transform child in PublicHand) Destroy(child.gameObject);
-        }
+        ClearPublicHand();
 
         for (int i = 0; i < remainingCards.Count; i++)
         {
@@ -85,7 +86,7 @@ public class CardDealer : MonoBehaviour
         PersistDealtHands(save, allPlayers);
 
         HideAllHands();
-        Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({remainingCards.Count - totalFairCards} public).");
+        Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({publicCards.Count} public).");
     }
 
     bool HasAnySavedHands(GameSaveData save)
@@ -115,7 +116,7 @@ public class CardDealer : MonoBehaviour
         }
 
         RestoreEnvelope(save);
-        RebuildPublicHandUI(save, allPlayers);
+        RebuildPublicHand(save, allPlayers);
     }
 
     void RestoreEnvelope(GameSaveData save)
@@ -131,12 +132,22 @@ public class CardDealer : MonoBehaviour
         if (r != null) cardManager.winningEnvelope.Add(r);
     }
 
-    void RebuildPublicHandUI(GameSaveData save, CluedoPlayer[] allPlayers)
+    void RebuildPublicHand(GameSaveData save, CluedoPlayer[] allPlayers)
     {
+        ClearPublicHand();
         if (PublicHand == null || cardManager == null) return;
 
-        foreach (Transform child in PublicHand) Destroy(child.gameObject);
+        if (save != null && save.publicHandCardNames != null && save.publicHandCardNames.Count > 0)
+        {
+            foreach (string cardName in save.publicHandCardNames)
+            {
+                Card card = FindCardByName(cardName);
+                if (card != null) SpawnPublicCard(card);
+            }
+            return;
+        }
 
+        // Fallback for older saves: compute leftover from allCards minus envelope minus dealt hands.
         HashSet<Card> dealt = new HashSet<Card>(cardManager.winningEnvelope);
         foreach (CluedoPlayer cp in allPlayers)
         {
@@ -149,12 +160,20 @@ public class CardDealer : MonoBehaviour
         }
     }
 
+    void ClearPublicHand()
+    {
+        publicCards.Clear();
+        if (PublicHand == null) return;
+        foreach (Transform child in PublicHand) Destroy(child.gameObject);
+    }
+
     void SpawnPublicCard(Card card)
     {
         if (PublicHand == null || card == null) return;
         GameObject cardObj = Instantiate(card.gameObject, PublicHand);
         cardObj.transform.localScale = Vector3.one;
         cardObj.SetActive(true);
+        publicCards.Add(card);
         Debug.Log("Public Card Spawned: " + card.cardName);
     }
 
@@ -172,6 +191,13 @@ public class CardDealer : MonoBehaviour
             {
                 if (c != null) setup.handCardNames.Add(c.cardName);
             }
+        }
+
+        if (save.publicHandCardNames == null) save.publicHandCardNames = new List<string>();
+        save.publicHandCardNames.Clear();
+        foreach (Card c in publicCards)
+        {
+            if (c != null) save.publicHandCardNames.Add(c.cardName);
         }
 
         save.cardsDealt = true;
@@ -213,6 +239,7 @@ public class CardDealer : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerHand.GetComponent<RectTransform>());
     }
 
+    // Wire to a UI Button OnClick (no-runtime dropdown). Toggles the public hand.
     public void TogglePublicHand()
     {
         if (PublicHand != null)
@@ -227,6 +254,8 @@ public class CardDealer : MonoBehaviour
 
     private void Update()
     {
+        RefreshCardCanvasVisibility();
+
         if (PauseManager.IsGamePaused) return;
 
         if (Input.GetKeyDown(KeyCode.H)) HideAllHands();
@@ -238,5 +267,14 @@ public class CardDealer : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha4)) ShowHandByIndex(3);
         if (Input.GetKeyDown(KeyCode.Alpha5)) ShowHandByIndex(4);
         if (Input.GetKeyDown(KeyCode.Alpha6)) ShowHandByIndex(5);
+    }
+
+    void RefreshCardCanvasVisibility()
+    {
+        if (cardCanvas == null) return;
+
+        bool show = cameraController == null || cameraController.CurrentMode != CameraController.CameraMode.Idle;
+        if (cardCanvas.activeSelf != show)
+            cardCanvas.SetActive(show);
     }
 }

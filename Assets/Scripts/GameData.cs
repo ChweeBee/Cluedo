@@ -73,5 +73,8 @@ public class GameSaveData
     // Names of players (CluedoPlayer transforms / CharacterId names) that have been eliminated by a wrong accusation.
     public List<string> eliminatedPlayerNames = new List<string>();
 
+    // Cards revealed face-up on the public table (matches Card.cardName).
+    public List<string> publicHandCardNames = new List<string>();
+
     public bool IsValid => players != null && players.Count >= 2;
 }
