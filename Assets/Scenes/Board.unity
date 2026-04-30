@@ -6839,6 +6839,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardManager: {fileID: 125601958}
+  envelope: {fileID: 1922017288}
   playerHand: {fileID: 1210453177}
   PublicHand: {fileID: 790898820}
   cardCanvas: {fileID: 202394829}
