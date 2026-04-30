@@ -19,6 +19,8 @@ public class PlayerSetup
     public CharacterId character;
     public bool isCPU;
 
+    public bool IsAI { get => isCPU; set => isCPU = value; }
+
     // Persisted board position. -1,-1 means "no saved tile yet — use the spawner's default for this character".
     public int tileX = -1;
     public int tileY = -1;

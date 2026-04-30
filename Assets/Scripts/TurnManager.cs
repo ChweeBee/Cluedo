@@ -44,6 +44,28 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    public bool IsCurrentPlayerAI => IsAI(CurrentPlayer);
+
+    public bool IsAI(Transform unit)
+    {
+        if (unit == null) return false;
+        var cp = unit.GetComponent<CluedoPlayer>();
+        if (cp != null) return cp.isAI;
+        return IsAI(NameToCharacter(unit.name));
+    }
+
+    public bool IsAI(CharacterId character)
+    {
+        if (data == null) return false;
+        var setup = data.players.Find(p => p.character == character);
+        return setup != null && setup.isCPU;
+    }
+
+    static CharacterId NameToCharacter(string name)
+    {
+        return System.Enum.TryParse(name, out CharacterId id) ? id : default;
+    }
+
     void Start()
     {
         LoadSaveDataIfAvailable();

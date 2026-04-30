@@ -196,6 +196,8 @@ public class GameManager : MonoBehaviour
         if (rollResultText != null)
             rollResultText.text = BuildPostRollText(diceManager.totalResult);
 
+        ResetCameraToDefault();
+
         Debug.Log("[GameManager] Waiting for player movement.");
     }
 
@@ -215,6 +217,8 @@ public class GameManager : MonoBehaviour
 
         if (rollResultText != null)
             rollResultText.text = BuildAlreadyMovedText();
+
+        ResetCameraToDefault();
     }
 
     public void EndCurrentTurn()
@@ -339,6 +343,9 @@ public class GameManager : MonoBehaviour
 
     private string BuildPostRollText(int total)
     {
+        if (IsCurrentPlayerAI())
+            return "Rolled: " + total + "\nWaiting for AI...";
+
         string text = "Rolled: " + total +
                       "\nPress Space to confirm move" +
                       "\nPress N to end turn";
@@ -353,6 +360,9 @@ public class GameManager : MonoBehaviour
 
     private string BuildAlreadyMovedText()
     {
+        if (IsCurrentPlayerAI())
+            return "Waiting for AI...";
+
         string text = "Already moved this turn." +
                       "\nPress N to end turn";
 
@@ -362,6 +372,18 @@ public class GameManager : MonoBehaviour
             text += "\nPress A to make an accusation";
         }
         return text;
+    }
+
+    private bool IsCurrentPlayerAI()
+    {
+        return turnManager != null && turnManager.IsCurrentPlayerAI;
+    }
+
+    private void ResetCameraToDefault()
+    {
+        if (cameraController == null) return;
+        cameraController.SetMode(CameraController.CameraMode.Default);
+        cameraController.ResetIdleTimer();
     }
 
     private bool IsCurrentPlayerInRoom()
@@ -589,7 +611,7 @@ private IEnumerator DelayBeforeNextTurn()
         RefreshTurnText();
 
         if (rollResultText != null)
-            rollResultText.text = "Press Space to roll";
+            rollResultText.text = IsCurrentPlayerAI() ? "Waiting for AI..." : "Press Space to roll";
     }
 
     private void RefreshTurnText()
