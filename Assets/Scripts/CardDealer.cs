@@ -7,6 +7,7 @@ public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
     public Transform playerHand; // This is your main UI container
+    public Transform PublicHand;  // Optional UI container for the leftover "table" cards
 
     private bool hasDealt = false;
 
@@ -58,17 +59,33 @@ public class CardDealer : MonoBehaviour
             remainingCards[randomIndex] = temp;
         }
 
-        int playerIndex = 0;
-        foreach (Card card in remainingCards)
+        // Standard Cluedo math: deal evenly; any leftover go to the public table.
+        // If PublicHand isn't wired, fall back to round-robin so no card is lost.
+        int playerCount = allPlayers.Length;
+        int cardsPerPlayer = PublicHand != null ? remainingCards.Count / playerCount : remainingCards.Count;
+        int totalFairCards = PublicHand != null ? cardsPerPlayer * playerCount : remainingCards.Count;
+
+        if (PublicHand != null)
         {
-            allPlayers[playerIndex].hand.Add(card);
-            playerIndex = (playerIndex + 1) % allPlayers.Length;
+            foreach (Transform child in PublicHand) Destroy(child.gameObject);
+        }
+
+        for (int i = 0; i < remainingCards.Count; i++)
+        {
+            if (i < totalFairCards)
+            {
+                allPlayers[i % playerCount].hand.Add(remainingCards[i]);
+            }
+            else if (PublicHand != null)
+            {
+                SpawnPublicCard(remainingCards[i]);
+            }
         }
 
         PersistDealtHands(save, allPlayers);
 
         HideAllHands();
-        Debug.Log($"Dealt {remainingCards.Count} cards across {allPlayers.Length} players.");
+        Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({remainingCards.Count - totalFairCards} public).");
     }
 
     bool HasAnySavedHands(GameSaveData save)
@@ -96,6 +113,49 @@ public class CardDealer : MonoBehaviour
                 if (card != null) allPlayers[i].hand.Add(card);
             }
         }
+
+        RestoreEnvelope(save);
+        RebuildPublicHandUI(save, allPlayers);
+    }
+
+    void RestoreEnvelope(GameSaveData save)
+    {
+        if (cardManager == null || save == null || save.envelope == null) return;
+
+        cardManager.winningEnvelope.Clear();
+        Card s = FindCardByName(save.envelope.suspectCardName);
+        Card w = FindCardByName(save.envelope.weaponCardName);
+        Card r = FindCardByName(save.envelope.roomCardName);
+        if (s != null) cardManager.winningEnvelope.Add(s);
+        if (w != null) cardManager.winningEnvelope.Add(w);
+        if (r != null) cardManager.winningEnvelope.Add(r);
+    }
+
+    void RebuildPublicHandUI(GameSaveData save, CluedoPlayer[] allPlayers)
+    {
+        if (PublicHand == null || cardManager == null) return;
+
+        foreach (Transform child in PublicHand) Destroy(child.gameObject);
+
+        HashSet<Card> dealt = new HashSet<Card>(cardManager.winningEnvelope);
+        foreach (CluedoPlayer cp in allPlayers)
+        {
+            foreach (Card c in cp.hand) dealt.Add(c);
+        }
+
+        foreach (Card c in cardManager.allCards)
+        {
+            if (c != null && !dealt.Contains(c)) SpawnPublicCard(c);
+        }
+    }
+
+    void SpawnPublicCard(Card card)
+    {
+        if (PublicHand == null || card == null) return;
+        GameObject cardObj = Instantiate(card.gameObject, PublicHand);
+        cardObj.transform.localScale = Vector3.one;
+        cardObj.SetActive(true);
+        Debug.Log("Public Card Spawned: " + card.cardName);
     }
 
     void PersistDealtHands(GameSaveData save, CluedoPlayer[] allPlayers)
@@ -151,6 +211,12 @@ public class CardDealer : MonoBehaviour
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerHand.GetComponent<RectTransform>());
+    }
+
+    public void TogglePublicHand()
+    {
+        if (PublicHand != null)
+            PublicHand.gameObject.SetActive(!PublicHand.gameObject.activeSelf);
     }
 
     // Hide-only: H always hides the hand, never reveals it.
