@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
+    public Envelope envelope;
     public Transform playerHand; // This is your main UI container
     public Transform PublicHand;  // Optional UI container for the leftover "table" cards
     public GameObject cardCanvas; // Hidden when the camera enters Idle mode
@@ -19,6 +20,7 @@ public class CardDealer : MonoBehaviour
     private void Start()
     {
         if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
+        if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
         StartCoroutine(DealNextFrame());
     }
 
@@ -42,12 +44,13 @@ public class CardDealer : MonoBehaviour
             RestoreSavedHands(save, allPlayers);
             hasDealt = true;
             HideAllHands();
+            HidePublicHand();
             Debug.Log($"Restored saved hands for {allPlayers.Length} players.");
             return;
         }
 
         hasDealt = true;
-        PickWinners();
+        SyncEnvelopeFromGameState(save);
 
         List<Card> remainingCards = new List<Card>();
         foreach (Card c in cardManager.allCards)
@@ -86,6 +89,7 @@ public class CardDealer : MonoBehaviour
         PersistDealtHands(save, allPlayers);
 
         HideAllHands();
+        HidePublicHand();
         Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({publicCards.Count} public).");
     }
 
@@ -115,21 +119,8 @@ public class CardDealer : MonoBehaviour
             }
         }
 
-        RestoreEnvelope(save);
+        SyncEnvelopeFromGameState(save);
         RebuildPublicHand(save, allPlayers);
-    }
-
-    void RestoreEnvelope(GameSaveData save)
-    {
-        if (cardManager == null || save == null || save.envelope == null) return;
-
-        cardManager.winningEnvelope.Clear();
-        Card s = FindCardByName(save.envelope.suspectCardName);
-        Card w = FindCardByName(save.envelope.weaponCardName);
-        Card r = FindCardByName(save.envelope.roomCardName);
-        if (s != null) cardManager.winningEnvelope.Add(s);
-        if (w != null) cardManager.winningEnvelope.Add(w);
-        if (r != null) cardManager.winningEnvelope.Add(r);
     }
 
     void RebuildPublicHand(GameSaveData save, CluedoPlayer[] allPlayers)
@@ -210,12 +201,44 @@ public class CardDealer : MonoBehaviour
         return cardManager.allCards.Find(c => c != null && c.cardName == name);
     }
 
-    void PickWinners()
+    // Sync cardManager.winningEnvelope to the single source of truth (Envelope component or save.envelope).
+    // Envelope.Start runs before this (DealNextFrame yields a frame), so its cards are already chosen
+    // and removed from cardManager.allCards.
+    void SyncEnvelopeFromGameState(GameSaveData save)
     {
+        if (cardManager == null) return;
         cardManager.winningEnvelope.Clear();
-        cardManager.winningEnvelope.Add(cardManager.suspectDeck[Random.Range(0, cardManager.suspectDeck.Count)]);
-        cardManager.winningEnvelope.Add(cardManager.weaponDeck[Random.Range(0, cardManager.weaponDeck.Count)]);
-        cardManager.winningEnvelope.Add(cardManager.roomDeck[Random.Range(0, cardManager.roomDeck.Count)]);
+
+        if (envelope != null)
+        {
+            if (envelope.SuspectCard != null) cardManager.winningEnvelope.Add(envelope.SuspectCard);
+            if (envelope.WeaponCard != null) cardManager.winningEnvelope.Add(envelope.WeaponCard);
+            if (envelope.RoomCard != null) cardManager.winningEnvelope.Add(envelope.RoomCard);
+        }
+
+        // Fallback: pull from save.envelope by name (e.g., if no Envelope component is in the scene yet).
+        if (cardManager.winningEnvelope.Count < 3 && save != null && save.envelope != null && save.envelope.IsValid)
+        {
+            cardManager.winningEnvelope.Clear();
+            Card s = FindCardByName(save.envelope.suspectCardName);
+            Card w = FindCardByName(save.envelope.weaponCardName);
+            Card r = FindCardByName(save.envelope.roomCardName);
+            if (s != null) cardManager.winningEnvelope.Add(s);
+            if (w != null) cardManager.winningEnvelope.Add(w);
+            if (r != null) cardManager.winningEnvelope.Add(r);
+        }
+
+        // Ensure save.envelope reflects the chosen cards (covers fresh-game runs where Envelope had no slot to persist to).
+        if (save != null && save.slotIndex >= 0 && cardManager.winningEnvelope.Count == 3)
+        {
+            EnvelopeSolution sol = new EnvelopeSolution
+            {
+                suspectCardName = cardManager.winningEnvelope[0]?.cardName,
+                weaponCardName = cardManager.winningEnvelope[1]?.cardName,
+                roomCardName = cardManager.winningEnvelope[2]?.cardName
+            };
+            if (sol.IsValid) save.envelope = sol;
+        }
     }
 
     // This clears the UI and refills it with a specific player's cards
@@ -240,10 +263,18 @@ public class CardDealer : MonoBehaviour
     }
 
     // Wire to a UI Button OnClick (no-runtime dropdown). Toggles the public hand.
+    // Only opens when there are actually public cards to show.
     public void TogglePublicHand()
     {
-        if (PublicHand != null)
-            PublicHand.gameObject.SetActive(!PublicHand.gameObject.activeSelf);
+        if (PublicHand == null) return;
+        bool willShow = !PublicHand.gameObject.activeSelf;
+        if (willShow && publicCards.Count == 0) return;
+        PublicHand.gameObject.SetActive(willShow);
+    }
+
+    void HidePublicHand()
+    {
+        if (PublicHand != null) PublicHand.gameObject.SetActive(false);
     }
 
     // Hide-only: H always hides the hand, never reveals it.
