@@ -403,7 +403,11 @@ public class GameManager : MonoBehaviour
 
     public void OnAccusationMade(bool correct, string playerName)
     {
-        SetState(GameState.AccusationPhase);
+        Debug.Log("OnAccusationMade called - correct: " + correct + " player: " + playerName);
+    
+        if (correct) EndGame(playerName);
+        else EliminatePlayer(playerName);
+            SetState(GameState.AccusationPhase);
 
         if (correct)
         {
@@ -558,6 +562,8 @@ private IEnumerator DelayBeforeNextTurn()
 
     public void EndGame(string winner)
     {
+            Debug.Log("EndGame called - winner: " + winner);
+            
         SetState(GameState.GameOver);
 
         Debug.Log("[GameManager] GAME OVER - " + winner + " wins.");
