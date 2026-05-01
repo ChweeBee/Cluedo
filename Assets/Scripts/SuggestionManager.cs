@@ -20,6 +20,9 @@ public class SuggestionManager : MonoBehaviour
     [SerializeField] private Button suggestButton;
     [SerializeField] private Button cancelButton;
     [SerializeField] private TMP_Text suggestionResultText;
+    [SerializeField] private GameObject cardRevealPanel;
+    [SerializeField] private Transform cardButtonContainer;
+    [SerializeField] private GameObject cardButtonPrefab;
 
     [Header("Accusation UI")]
     [SerializeField] private GameObject accusationPanel;
@@ -35,11 +38,9 @@ public class SuggestionManager : MonoBehaviour
 
     private bool isWaitingForSuggestionResponse = false;
     private bool gameOver = false;
-
     private List<Transform> playersToAsk;
     private int currentPlayerIndex = 0;
     private Transform currentSuggester;
-
     private Card suggestedSuspect;
     private Card suggestedWeapon;
     private Card suggestedRoom;
@@ -48,6 +49,7 @@ public class SuggestionManager : MonoBehaviour
     {
         if (suggestionPanel != null) suggestionPanel.SetActive(false);
         if (accusationPanel != null) accusationPanel.SetActive(false);
+        if (cardRevealPanel != null) cardRevealPanel.SetActive(false);
         ClearResultTexts();
     }
 
@@ -66,21 +68,14 @@ public class SuggestionManager : MonoBehaviour
 
         if (suggestionPanel != null) suggestionPanel.SetActive(false);
         if (accusationPanel != null) accusationPanel.SetActive(false);
+        if (cardRevealPanel != null) cardRevealPanel.SetActive(false);
 
         SetupDropdowns();
 
-        if (suggestButton != null)
-            suggestButton.onClick.AddListener(MakeSuggestion);
-
-        if (cancelButton != null)
-            cancelButton.onClick.AddListener(CancelSuggestion);
-
-        if (accuseButton != null)
-            accuseButton.onClick.AddListener(MakeAccusation);
-
-        if (cancelAccuseButton != null)
-            cancelAccuseButton.onClick.AddListener(CancelAccusation);
-
+        if (suggestButton != null) suggestButton.onClick.AddListener(MakeSuggestion);
+        if (cancelButton != null) cancelButton.onClick.AddListener(CancelSuggestion);
+        if (accuseButton != null) accuseButton.onClick.AddListener(MakeAccusation);
+        if (cancelAccuseButton != null) cancelAccuseButton.onClick.AddListener(CancelAccusation);
         if (showEnvelopeButton != null)
         {
             showEnvelopeButton.onClick.AddListener(ShowEnvelope);
@@ -88,19 +83,15 @@ public class SuggestionManager : MonoBehaviour
         }
     }
 
+    public void RefreshDropdowns() { SetupDropdowns(); }
+
     void Update()
     {
-        if (turnManager == null || gameOver || isWaitingForSuggestionResponse)
-            return;
+        if (turnManager == null || gameOver || isWaitingForSuggestionResponse) return;
+        if (turnManager.CurrentPlayer == null) return;
 
-        if (turnManager.CurrentPlayer == null)
-            return;
-
-        if (Input.GetKeyDown(KeyCode.S))
-            ShowSuggestionPanel();
-
-        if (Input.GetKeyDown(KeyCode.A))
-            ShowAccusationPanel();
+        if (Input.GetKeyDown(KeyCode.S)) ShowSuggestionPanel();
+        if (Input.GetKeyDown(KeyCode.A)) ShowAccusationPanel();
     }
 
     private void SetupDropdowns()
@@ -123,10 +114,8 @@ public class SuggestionManager : MonoBehaviour
         {
             accuseSuspectDropdown.ClearOptions();
             List<string> names = cardManager.suspectDeck.Select(c => c.cardName).ToList();
-
-            if (envelope != null && envelope.SuspectCard != null && !names.Contains(envelope.SuspectCard.cardName))
+            if (envelope?.SuspectCard != null && !names.Contains(envelope.SuspectCard.cardName))
                 names.Add(envelope.SuspectCard.cardName);
-
             accuseSuspectDropdown.AddOptions(names);
         }
 
@@ -134,10 +123,8 @@ public class SuggestionManager : MonoBehaviour
         {
             accuseWeaponDropdown.ClearOptions();
             List<string> names = cardManager.weaponDeck.Select(c => c.cardName).ToList();
-
-            if (envelope != null && envelope.WeaponCard != null && !names.Contains(envelope.WeaponCard.cardName))
+            if (envelope?.WeaponCard != null && !names.Contains(envelope.WeaponCard.cardName))
                 names.Add(envelope.WeaponCard.cardName);
-
             accuseWeaponDropdown.AddOptions(names);
         }
 
@@ -145,29 +132,21 @@ public class SuggestionManager : MonoBehaviour
         {
             accuseRoomDropdown.ClearOptions();
             List<string> names = cardManager.roomDeck.Select(c => c.cardName).ToList();
-
-            if (envelope != null && envelope.RoomCard != null && !names.Contains(envelope.RoomCard.cardName))
+            if (envelope?.RoomCard != null && !names.Contains(envelope.RoomCard.cardName))
                 names.Add(envelope.RoomCard.cardName);
-
             accuseRoomDropdown.AddOptions(names);
         }
     }
 
-public void StartSuggestion(string playerName, Room room)
-{
-    Debug.Log("Starting suggestion for " + playerName);
-    Debug.Log(playerName + " suggests in " + room.roomName);
-
-    Debug.Log("Suggestion complete. Press N to end turn.");
-
-    ShowSuggestionPanel();
-}
-
+    public void StartSuggestion(string playerName, Room room)
+    {
+        Debug.Log("Starting suggestion for " + playerName + " in " + room.roomName);
+        ShowSuggestionPanel();
+    }
 
     public void ShowSuggestionPanel()
     {
-        if (suggestionPanel == null || gameOver || isWaitingForSuggestionResponse)
-            return;
+        if (suggestionPanel == null || gameOver || isWaitingForSuggestionResponse) return;
 
         Transform currentPlayer = turnManager.CurrentPlayer;
         Room currentRoom = roomManager.GetPlayerRoom(currentPlayer.name);
@@ -179,28 +158,40 @@ public void StartSuggestion(string playerName, Room room)
         }
 
         suggestionPanel.SetActive(true);
-
-        if (suggestionResultText != null)
-            suggestionResultText.text = "";
-
+        if (suggestionResultText != null) suggestionResultText.text = "";
         Debug.Log("Making suggestion in " + currentRoom.roomName);
     }
 
     public void ShowAccusationPanel()
     {
-        if (accusationPanel == null || gameOver)
-            return;
-
+        if (accusationPanel == null || gameOver) return;
         accusationPanel.SetActive(true);
+        if (accusationResultText != null) accusationResultText.text = "";
+    }
 
-        if (accusationResultText != null)
-            accusationResultText.text = "";
+    private void ShowCardChoicePanel(List<Card> matchingCards, System.Action<Card> onCardChosen)
+    {
+        cardRevealPanel.SetActive(true);
+
+        foreach (Transform child in cardButtonContainer)
+            DestroyImmediate(child.gameObject);
+
+        foreach (Card card in matchingCards)
+        {
+            GameObject btn = Instantiate(cardButtonPrefab, cardButtonContainer);
+            btn.GetComponentInChildren<TMP_Text>().text = card.cardName;
+            Card captured = card;
+            btn.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                cardRevealPanel.SetActive(false);
+                onCardChosen(captured);
+            });
+        }
     }
 
     public void MakeSuggestion()
     {
-        if (suspectDropdown == null || weaponDropdown == null)
-            return;
+        if (suspectDropdown == null || weaponDropdown == null) return;
 
         suggestedSuspect = cardManager.suspectDeck[suspectDropdown.value];
         suggestedWeapon = cardManager.weaponDeck[weaponDropdown.value];
@@ -210,48 +201,26 @@ public void StartSuggestion(string playerName, Room room)
 
         if (currentRoom == null)
         {
-            Debug.Log("Cannot make suggestion because player is not in a room");
+            Debug.Log("Cannot make suggestion - not in a room");
             suggestionPanel.SetActive(false);
             return;
         }
 
         suggestedRoom = cardManager.roomDeck.Find(r => r.cardName == currentRoom.roomName);
-
-        Debug.Log(
-            "Suggestion made: " +
-            suggestedSuspect.cardName + ", " +
-            suggestedWeapon.cardName + ", " +
-            currentRoom.roomName
-        );
-
+        Debug.Log("Suggestion made: " + suggestedSuspect.cardName + ", " + suggestedWeapon.cardName + ", " + currentRoom.roomName);
         suggestionPanel.SetActive(false);
         StartCoroutine(ResolveSuggestion());
     }
 
     public void MakeAccusation()
     {
-
-        Debug.Log("Dropdown values - Suspect: " + accuseSuspectDropdown.value + 
-              " Weapon: " + accuseWeaponDropdown.value + 
-              " Room: " + accuseRoomDropdown.value);
-         Debug.Log("Deck sizes - Suspects: " + cardManager.suspectDeck.Count + 
-              " Weapons: " + cardManager.weaponDeck.Count + 
-              " Rooms: " + cardManager.roomDeck.Count);
-
-        Debug.Log("Suspect 0: " + cardManager.suspectDeck[0].cardName);
-        Debug.Log("Suspect " + accuseSuspectDropdown.value + ": " + cardManager.suspectDeck[accuseSuspectDropdown.value].cardName);
-        Debug.Log("Weapon " + accuseWeaponDropdown.value + ": " + cardManager.weaponDeck[accuseWeaponDropdown.value].cardName);
-        Debug.Log("Room " + accuseRoomDropdown.value + ": " + cardManager.roomDeck[accuseRoomDropdown.value].cardName);
-        Debug.Log("Envelope: " + envelope.SuspectCard.cardName + ", " + envelope.WeaponCard.cardName + ", " + envelope.RoomCard.cardName);
-        if (accuseSuspectDropdown == null || accuseWeaponDropdown == null || accuseRoomDropdown == null)
-            return;
-
+        if (accuseSuspectDropdown == null || accuseWeaponDropdown == null || accuseRoomDropdown == null) return;
 
         Card accusedSuspect = GetCardFromDropdownValue(accuseSuspectDropdown, cardManager.suspectDeck, envelope?.SuspectCard);
         Card accusedWeapon = GetCardFromDropdownValue(accuseWeaponDropdown, cardManager.weaponDeck, envelope?.WeaponCard);
         Card accusedRoom = GetCardFromDropdownValue(accuseRoomDropdown, cardManager.roomDeck, envelope?.RoomCard);
-        bool isCorrect = envelope != null && envelope.CheckAccusation(accusedSuspect, accusedWeapon, accusedRoom);
 
+        bool isCorrect = envelope != null && envelope.CheckAccusation(accusedSuspect, accusedWeapon, accusedRoom);
         string accuserName = turnManager.CurrentPlayer.name;
 
         if (accusationPanel != null) accusationPanel.SetActive(false);
@@ -259,19 +228,13 @@ public void StartSuggestion(string playerName, Room room)
         if (isCorrect)
         {
             Debug.Log("[SuggestionManager] " + accuserName + " made a CORRECT accusation");
-
-            if (accusationResultText != null)
-                accusationResultText.text = "CORRECT! " + accuserName + " wins!";
-
+            if (accusationResultText != null) accusationResultText.text = "CORRECT! " + accuserName + " wins!";
             GameManager.Instance.OnAccusationMade(true, accuserName);
         }
         else
         {
-            Debug.Log("[SuggestionManager] " + accuserName + " made an INCORRECT accusation -> eliminating");
-
-            if (accusationResultText != null)
-                accusationResultText.text = "INCORRECT! " + accuserName + " is out!";
-
+            Debug.Log("[SuggestionManager] " + accuserName + " made an INCORRECT accusation");
+            if (accusationResultText != null) accusationResultText.text = "INCORRECT! " + accuserName + " is out!";
             GameManager.Instance.OnAccusationMade(false, accuserName);
         }
     }
@@ -293,20 +256,15 @@ public void StartSuggestion(string playerName, Room room)
         if (GameManager.Instance == null) return;
         if (GameManager.Instance.CurrentState == GameManager.GameState.SuggestionPhase ||
             GameManager.Instance.CurrentState == GameManager.GameState.AccusationPhase)
-        {
             GameManager.Instance.ReturnToPostMove();
-        }
     }
 
     private Card GetCardFromDropdownValue(TMP_Dropdown dropdown, List<Card> deckCards, Card envelopeCard)
     {
         string selectedName = dropdown.options[dropdown.value].text;
-        
         Card found = deckCards.Find(c => c.cardName == selectedName);
         if (found != null) return found;
-        
         if (envelopeCard != null && envelopeCard.cardName == selectedName) return envelopeCard;
-        
         return null;
     }
 
@@ -314,11 +272,9 @@ public void StartSuggestion(string playerName, Room room)
     {
         isWaitingForSuggestionResponse = true;
         currentSuggester = turnManager.CurrentPlayer;
-
         playersToAsk = new List<Transform>();
 
         int startIndex = turnManager.CurrentIndex;
-
         for (int i = 1; i < turnManager.PlayerCount; i++)
         {
             int nextIndex = (startIndex + i) % turnManager.PlayerCount;
@@ -331,16 +287,16 @@ public void StartSuggestion(string playerName, Room room)
         for (currentPlayerIndex = 0; currentPlayerIndex < playersToAsk.Count; currentPlayerIndex++)
         {
             Transform playerToAsk = playersToAsk[currentPlayerIndex];
+            List<Card> matchingCards = GetAllMatchingCards(playerToAsk);
 
-            Card cardToShow = GetPlayerCardMatchingSuggestion(playerToAsk);
-
-            if (cardToShow != null)
+            if (matchingCards.Count > 0)
             {
-                shownCard = cardToShow;
                 showingPlayer = playerToAsk;
-
+                Card chosen = null;
+                ShowCardChoicePanel(matchingCards, c => chosen = c);
+                yield return new WaitUntil(() => chosen != null);
+                shownCard = chosen;
                 Debug.Log(showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name);
-                ShowCardToPlayer(shownCard, currentSuggester);
                 break;
             }
 
@@ -351,84 +307,43 @@ public void StartSuggestion(string playerName, Room room)
             Debug.Log("No one could disprove " + currentSuggester.name + "'s suggestion");
 
         isWaitingForSuggestionResponse = false;
-
         yield return new WaitForSeconds(1f);
 
         if (GameManager.Instance != null)
             GameManager.Instance.OnSuggestionFinished();
     }
 
-private Card GetPlayerCardMatchingSuggestion(Transform player)
-{
-    CluedoPlayer cluedoPlayer = player.GetComponent<CluedoPlayer>();
-
-    if (cluedoPlayer == null || cluedoPlayer.hand == null)
-        return null;
-
-    foreach (Card card in cluedoPlayer.hand)
+    private List<Card> GetAllMatchingCards(Transform player)
     {
-        if (card == suggestedSuspect || card == suggestedWeapon || card == suggestedRoom)
-            return card;
+        List<Card> matches = new List<Card>();
+        CluedoPlayer cluedoPlayer = player.GetComponent<CluedoPlayer>();
+        if (cluedoPlayer == null || cluedoPlayer.hand == null) return matches;
+
+        foreach (Card card in cluedoPlayer.hand)
+        {
+            if (card.cardName == suggestedSuspect?.cardName ||
+                card.cardName == suggestedWeapon?.cardName ||
+                card.cardName == suggestedRoom?.cardName)
+                matches.Add(card);
+        }
+
+        Debug.Log("Found " + matches.Count + " matching cards for " + player.name);
+        return matches;
     }
-
-    return null;
-}
-
 
     private void ShowCardToPlayer(Card card, Transform player)
     {
         Debug.Log("Showing " + card.cardName + " to " + player.name);
     }
 
-    private IEnumerator HandleIncorrectAccusation()
-    {
-        Transform incorrectPlayer = turnManager.CurrentPlayer;
-
-        Debug.Log(incorrectPlayer.name + " is eliminated from the game");
-
-        //turnManager.NextTurn();
-
-
-
-        GameManager.Instance.OnAccusationMade(false, incorrectPlayer.name);
-
-
-        yield return new WaitForSeconds(2f);
-
-        if (accusationPanel != null)
-            accusationPanel.SetActive(false);
-
-    }
-
-    /*
-
-    Obselete
-
-    private void GameOver(bool playerWon, Transform winner)
-    {
-        gameOver = true;
-
-        Debug.Log("Game Over! " + winner.name + " wins");
-
-        if (showEnvelopeButton != null)
-            showEnvelopeButton.gameObject.SetActive(true);
-
-        if (envelope != null)
-            envelope.SetGameOver(true);
-    }
-    */
-
     private void ShowEnvelope()
     {
-        if (envelope != null)
-            envelope.ShowEnvelope();
+        if (envelope != null) envelope.ShowEnvelope();
     }
 
     private IEnumerator CloseAccusationPanelAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-
-        if (accusationPanel != null)
-            accusationPanel.SetActive(false);
+        if (accusationPanel != null) accusationPanel.SetActive(false);
     }
 }
