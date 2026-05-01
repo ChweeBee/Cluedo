@@ -138,24 +138,22 @@ public class Envelope : MonoBehaviour
         gameOver = isGameOver;
         if (gameOver) isRevealed = true;
     }
+
+public bool CheckAccusation(Card accusedSuspect, Card accusedWeapon, Card accusedRoom)
+{
+    bool isCorrect = (accusedSuspect?.cardName == suspectCard?.cardName && 
+                     accusedWeapon?.cardName == weaponCard?.cardName && 
+                     accusedRoom?.cardName == roomCard?.cardName);
     
-    public bool CheckAccusation(Card accusedSuspect, Card accusedWeapon, Card accusedRoom)
-    {
-        bool isCorrect = (accusedSuspect == suspectCard && 
-                         accusedWeapon == weaponCard && 
-                         accusedRoom == roomCard);
-        
-        if (isCorrect)
-        {
-            Debug.Log("Accusation is CORRECT!");
-        }
-        else
-        {
-            Debug.Log("Accusation is INCORRECT!");
-        }
-        
-        return isCorrect;
-    }
+    Debug.Log("Checking accusation - " +
+              "Suspect: " + accusedSuspect?.cardName + " vs " + suspectCard?.cardName + " | " +
+              "Weapon: " + accusedWeapon?.cardName + " vs " + weaponCard?.cardName + " | " +
+              "Room: " + accusedRoom?.cardName + " vs " + roomCard?.cardName);
+    
+    Debug.Log("Accusation is " + (isCorrect ? "CORRECT" : "INCORRECT"));
+    return isCorrect;
+}
+
     
     // Method to visually show the envelope (optional animation)
     public void ShowEnvelope()

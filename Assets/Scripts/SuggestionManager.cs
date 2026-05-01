@@ -230,13 +230,26 @@ public void StartSuggestion(string playerName, Room room)
 
     public void MakeAccusation()
     {
+
+        Debug.Log("Dropdown values - Suspect: " + accuseSuspectDropdown.value + 
+              " Weapon: " + accuseWeaponDropdown.value + 
+              " Room: " + accuseRoomDropdown.value);
+         Debug.Log("Deck sizes - Suspects: " + cardManager.suspectDeck.Count + 
+              " Weapons: " + cardManager.weaponDeck.Count + 
+              " Rooms: " + cardManager.roomDeck.Count);
+
+        Debug.Log("Suspect 0: " + cardManager.suspectDeck[0].cardName);
+        Debug.Log("Suspect " + accuseSuspectDropdown.value + ": " + cardManager.suspectDeck[accuseSuspectDropdown.value].cardName);
+        Debug.Log("Weapon " + accuseWeaponDropdown.value + ": " + cardManager.weaponDeck[accuseWeaponDropdown.value].cardName);
+        Debug.Log("Room " + accuseRoomDropdown.value + ": " + cardManager.roomDeck[accuseRoomDropdown.value].cardName);
+        Debug.Log("Envelope: " + envelope.SuspectCard.cardName + ", " + envelope.WeaponCard.cardName + ", " + envelope.RoomCard.cardName);
         if (accuseSuspectDropdown == null || accuseWeaponDropdown == null || accuseRoomDropdown == null)
             return;
 
-        Card accusedSuspect = GetCardFromDropdownValue(accuseSuspectDropdown.value, cardManager.suspectDeck, envelope?.SuspectCard);
-        Card accusedWeapon = GetCardFromDropdownValue(accuseWeaponDropdown.value, cardManager.weaponDeck, envelope?.WeaponCard);
-        Card accusedRoom = GetCardFromDropdownValue(accuseRoomDropdown.value, cardManager.roomDeck, envelope?.RoomCard);
 
+        Card accusedSuspect = GetCardFromDropdownValue(accuseSuspectDropdown, cardManager.suspectDeck, envelope?.SuspectCard);
+        Card accusedWeapon = GetCardFromDropdownValue(accuseWeaponDropdown, cardManager.weaponDeck, envelope?.WeaponCard);
+        Card accusedRoom = GetCardFromDropdownValue(accuseRoomDropdown, cardManager.roomDeck, envelope?.RoomCard);
         bool isCorrect = envelope != null && envelope.CheckAccusation(accusedSuspect, accusedWeapon, accusedRoom);
 
         string accuserName = turnManager.CurrentPlayer.name;
@@ -285,14 +298,15 @@ public void StartSuggestion(string playerName, Room room)
         }
     }
 
-    private Card GetCardFromDropdownValue(int dropdownValue, List<Card> deckCards, Card envelopeCard)
+    private Card GetCardFromDropdownValue(TMP_Dropdown dropdown, List<Card> deckCards, Card envelopeCard)
     {
-        if (dropdownValue < deckCards.Count)
-            return deckCards[dropdownValue];
-
-        if (envelopeCard != null && dropdownValue == deckCards.Count)
-            return envelopeCard;
-
+        string selectedName = dropdown.options[dropdown.value].text;
+        
+        Card found = deckCards.Find(c => c.cardName == selectedName);
+        if (found != null) return found;
+        
+        if (envelopeCard != null && envelopeCard.cardName == selectedName) return envelopeCard;
+        
         return null;
     }
 
