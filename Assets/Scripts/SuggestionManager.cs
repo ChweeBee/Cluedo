@@ -297,6 +297,9 @@ public class SuggestionManager : MonoBehaviour
                 yield return new WaitUntil(() => chosen != null);
                 shownCard = chosen;
                 Debug.Log(showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name);
+
+                if (suggestionResultText != null)
+                    suggestionResultText.text = showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name;
                 break;
             }
 
@@ -304,7 +307,11 @@ public class SuggestionManager : MonoBehaviour
         }
 
         if (shownCard == null)
+        {
             Debug.Log("No one could disprove " + currentSuggester.name + "'s suggestion");
+            if (suggestionResultText != null)
+                suggestionResultText.text = "No one could disprove " + currentSuggester.name + "'s suggestion.";
+        }
 
         isWaitingForSuggestionResponse = false;
         yield return new WaitForSeconds(1f);
