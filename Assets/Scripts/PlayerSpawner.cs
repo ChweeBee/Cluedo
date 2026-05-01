@@ -53,6 +53,15 @@ public class PlayerSpawner : MonoBehaviour
 
             var go = Instantiate(entry.prefab, worldPos, Quaternion.identity, parent);
             go.name = setup.character.ToString();
+
+            var cluedoPlayer = go.GetComponent<CluedoPlayer>();
+            if (cluedoPlayer != null)
+            {
+                cluedoPlayer.character = setup.character;
+                cluedoPlayer.isAI = setup.isCPU;
+                cluedoPlayer.HydrateNotebookFromSave(setup.notebookCheckedCardNames);
+            }
+
             spawned[setup.character] = go.transform;
         }
 

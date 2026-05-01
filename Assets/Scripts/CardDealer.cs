@@ -6,14 +6,30 @@ using System.Collections.Generic;
 public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
-    public Transform playerHand; // This is your main UI container
+    public Envelope envelope;
+    public Transform playerHand; 
+    public Transform PublicHand; 
+    public GameObject cardCanvas;
+    public CameraController cameraController;
+    public CluedoNotebook notebookManager;
 
     private bool hasDealt = false;
+    private readonly List<Card> publicCards = new List<Card>();
 
     public bool IsHandVisible => playerHand != null && playerHand.gameObject.activeSelf;
 
     private void Start()
     {
+        if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
+        if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
+        if (notebookManager == null)
+        {
+            notebookManager = FindAnyObjectByType<CluedoNotebook>();
+            if (notebookManager == null) notebookManager = gameObject.AddComponent<CluedoNotebook>();
+        }
+        if (notebookManager != null && notebookManager.cardManager == null)
+            notebookManager.cardManager = cardManager;
+
         StartCoroutine(DealNextFrame());
     }
 
@@ -23,11 +39,28 @@ public class CardDealer : MonoBehaviour
         DealToAllPlayers();
     }
 
+    CluedoPlayer[] GetPlayersInTurnOrder()
+    {
+        CluedoPlayer[] live = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+        if (save == null || save.players == null || save.players.Count == 0) return live;
+
+        var byCharacter = new Dictionary<CharacterId, CluedoPlayer>();
+        foreach (var cp in live)
+            if (cp != null) byCharacter[cp.character] = cp;
+
+        var ordered = new List<CluedoPlayer>(save.players.Count);
+        foreach (var ps in save.players)
+            if (ps != null && byCharacter.TryGetValue(ps.character, out var cp)) ordered.Add(cp);
+
+        return ordered.ToArray();
+    }
+
     public void DealToAllPlayers()
     {
         if (hasDealt) { Debug.Log("Cards already dealt"); return; }
 
-        CluedoPlayer[] allPlayers = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
+        CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
         if (allPlayers.Length == 0) { Debug.LogError("No Players found in scene"); return; }
 
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
@@ -37,12 +70,13 @@ public class CardDealer : MonoBehaviour
             RestoreSavedHands(save, allPlayers);
             hasDealt = true;
             HideAllHands();
+            HidePublicHand();
             Debug.Log($"Restored saved hands for {allPlayers.Length} players.");
             return;
         }
 
         hasDealt = true;
-        PickWinners();
+        SyncEnvelopeFromGameState(save);
 
         List<Card> remainingCards = new List<Card>();
         foreach (Card c in cardManager.allCards)
@@ -58,17 +92,30 @@ public class CardDealer : MonoBehaviour
             remainingCards[randomIndex] = temp;
         }
 
-        int playerIndex = 0;
-        foreach (Card card in remainingCards)
+
+        int playerCount = allPlayers.Length;
+        int cardsPerPlayer = PublicHand != null ? remainingCards.Count / playerCount : remainingCards.Count;
+        int totalFairCards = PublicHand != null ? cardsPerPlayer * playerCount : remainingCards.Count;
+
+        ClearPublicHand();
+
+        for (int i = 0; i < remainingCards.Count; i++)
         {
-            allPlayers[playerIndex].hand.Add(card);
-            playerIndex = (playerIndex + 1) % allPlayers.Length;
+            if (i < totalFairCards)
+            {
+                allPlayers[i % playerCount].hand.Add(remainingCards[i]);
+            }
+            else if (PublicHand != null)
+            {
+                SpawnPublicCard(remainingCards[i]);
+            }
         }
 
         PersistDealtHands(save, allPlayers);
 
         HideAllHands();
-        Debug.Log($"Dealt {remainingCards.Count} cards across {allPlayers.Length} players.");
+        HidePublicHand();
+        Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({publicCards.Count} public).");
     }
 
     bool HasAnySavedHands(GameSaveData save)
@@ -96,6 +143,53 @@ public class CardDealer : MonoBehaviour
                 if (card != null) allPlayers[i].hand.Add(card);
             }
         }
+
+        SyncEnvelopeFromGameState(save);
+        RebuildPublicHand(save, allPlayers);
+    }
+
+    void RebuildPublicHand(GameSaveData save, CluedoPlayer[] allPlayers)
+    {
+        ClearPublicHand();
+        if (PublicHand == null || cardManager == null) return;
+
+        if (save != null && save.publicHandCardNames != null && save.publicHandCardNames.Count > 0)
+        {
+            foreach (string cardName in save.publicHandCardNames)
+            {
+                Card card = FindCardByName(cardName);
+                if (card != null) SpawnPublicCard(card);
+            }
+            return;
+        }
+
+        HashSet<Card> dealt = new HashSet<Card>(cardManager.winningEnvelope);
+        foreach (CluedoPlayer cp in allPlayers)
+        {
+            foreach (Card c in cp.hand) dealt.Add(c);
+        }
+
+        foreach (Card c in cardManager.allCards)
+        {
+            if (c != null && !dealt.Contains(c)) SpawnPublicCard(c);
+        }
+    }
+
+    void ClearPublicHand()
+    {
+        publicCards.Clear();
+        if (PublicHand == null) return;
+        foreach (Transform child in PublicHand) Destroy(child.gameObject);
+    }
+
+    void SpawnPublicCard(Card card)
+    {
+        if (PublicHand == null || card == null) return;
+        GameObject cardObj = Instantiate(card.gameObject, PublicHand);
+        cardObj.transform.localScale = Vector3.one;
+        cardObj.SetActive(true);
+        publicCards.Add(card);
+        Debug.Log("Public Card Spawned: " + card.cardName);
     }
 
     void PersistDealtHands(GameSaveData save, CluedoPlayer[] allPlayers)
@@ -114,6 +208,13 @@ public class CardDealer : MonoBehaviour
             }
         }
 
+        if (save.publicHandCardNames == null) save.publicHandCardNames = new List<string>();
+        save.publicHandCardNames.Clear();
+        foreach (Card c in publicCards)
+        {
+            if (c != null) save.publicHandCardNames.Add(c.cardName);
+        }
+
         save.cardsDealt = true;
         SaveSystem.Save(save.slotIndex, save);
     }
@@ -124,53 +225,100 @@ public class CardDealer : MonoBehaviour
         return cardManager.allCards.Find(c => c != null && c.cardName == name);
     }
 
-    void PickWinners()
+    void SyncEnvelopeFromGameState(GameSaveData save)
     {
+        if (cardManager == null) return;
         cardManager.winningEnvelope.Clear();
-        cardManager.winningEnvelope.Add(cardManager.suspectDeck[Random.Range(0, cardManager.suspectDeck.Count)]);
-        cardManager.winningEnvelope.Add(cardManager.weaponDeck[Random.Range(0, cardManager.weaponDeck.Count)]);
-        cardManager.winningEnvelope.Add(cardManager.roomDeck[Random.Range(0, cardManager.roomDeck.Count)]);
-    }
 
-    // This clears the UI and refills it with a specific player's cards
+        if (envelope != null)
+        {
+            if (envelope.SuspectCard != null) cardManager.winningEnvelope.Add(envelope.SuspectCard);
+            if (envelope.WeaponCard != null) cardManager.winningEnvelope.Add(envelope.WeaponCard);
+            if (envelope.RoomCard != null) cardManager.winningEnvelope.Add(envelope.RoomCard);
+        }
+
+        if (cardManager.winningEnvelope.Count < 3 && save != null && save.envelope != null && save.envelope.IsValid)
+        {
+            cardManager.winningEnvelope.Clear();
+            Card s = FindCardByName(save.envelope.suspectCardName);
+            Card w = FindCardByName(save.envelope.weaponCardName);
+            Card r = FindCardByName(save.envelope.roomCardName);
+            if (s != null) cardManager.winningEnvelope.Add(s);
+            if (w != null) cardManager.winningEnvelope.Add(w);
+            if (r != null) cardManager.winningEnvelope.Add(r);
+        }
+
+        if (save != null && save.slotIndex >= 0 && cardManager.winningEnvelope.Count == 3)
+        {
+            EnvelopeSolution sol = new EnvelopeSolution
+            {
+                suspectCardName = cardManager.winningEnvelope[0]?.cardName,
+                weaponCardName = cardManager.winningEnvelope[1]?.cardName,
+                roomCardName = cardManager.winningEnvelope[2]?.cardName
+            };
+            if (sol.IsValid) save.envelope = sol;
+        }
+    }
     public void ShowHandByIndex(int index)
     {
-        CluedoPlayer[] allPlayers = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
+        CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
         if (index < 0 || index >= allPlayers.Length) return;
 
-        // Ensure the hand is actually visible when we switch
         playerHand.gameObject.SetActive(true);
 
-        // Clear existing cards
         foreach (Transform child in playerHand) Destroy(child.gameObject);
 
-        // Add new cards
         foreach (Card card in allPlayers[index].hand)
         {
             Instantiate(card, playerHand);
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerHand.GetComponent<RectTransform>());
+
+        if (notebookManager != null) notebookManager.ShowForPlayer(allPlayers[index]);
     }
 
-    // Hide-only: H always hides the hand, never reveals it.
+    public void TogglePublicHand()
+    {
+        if (PublicHand == null) return;
+        bool willShow = !PublicHand.gameObject.activeSelf;
+        if (willShow && publicCards.Count == 0) return;
+        PublicHand.gameObject.SetActive(willShow);
+    }
+
+    void HidePublicHand()
+    {
+        if (PublicHand != null) PublicHand.gameObject.SetActive(false);
+    }
+
     public void HideAllHands()
     {
         if (playerHand != null) playerHand.gameObject.SetActive(false);
+        if (notebookManager != null) notebookManager.Hide();
     }
 
     private void Update()
     {
+        RefreshCardCanvasVisibility();
+
         if (PauseManager.IsGamePaused) return;
 
         if (Input.GetKeyDown(KeyCode.H)) HideAllHands();
 
-        // 1 and 2 now trigger the "Refill UI" logic
         if (Input.GetKeyDown(KeyCode.Alpha1)) ShowHandByIndex(0);
         if (Input.GetKeyDown(KeyCode.Alpha2)) ShowHandByIndex(1);
         if (Input.GetKeyDown(KeyCode.Alpha3)) ShowHandByIndex(2);
         if (Input.GetKeyDown(KeyCode.Alpha4)) ShowHandByIndex(3);
         if (Input.GetKeyDown(KeyCode.Alpha5)) ShowHandByIndex(4);
         if (Input.GetKeyDown(KeyCode.Alpha6)) ShowHandByIndex(5);
+    }
+
+    void RefreshCardCanvasVisibility()
+    {
+        if (cardCanvas == null) return;
+
+        bool show = cameraController == null || cameraController.CurrentMode != CameraController.CameraMode.Idle;
+        if (cardCanvas.activeSelf != show)
+            cardCanvas.SetActive(show);
     }
 }

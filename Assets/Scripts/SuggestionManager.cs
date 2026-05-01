@@ -171,6 +171,13 @@ public class SuggestionManager : MonoBehaviour
 
     private void ShowCardChoicePanel(List<Card> matchingCards, System.Action<Card> onCardChosen)
     {
+        if (cardRevealPanel == null || cardButtonContainer == null || cardButtonPrefab == null)
+        {
+            Debug.LogWarning("[SuggestionManager] cardRevealPanel/container/prefab not wired — auto-picking first matching card.");
+            if (matchingCards != null && matchingCards.Count > 0) onCardChosen?.Invoke(matchingCards[0]);
+            return;
+        }
+
         cardRevealPanel.SetActive(true);
 
         foreach (Transform child in cardButtonContainer)
@@ -297,6 +304,9 @@ public class SuggestionManager : MonoBehaviour
                 yield return new WaitUntil(() => chosen != null);
                 shownCard = chosen;
                 Debug.Log(showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name);
+
+                if (suggestionResultText != null)
+                    suggestionResultText.text = showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name;
                 break;
             }
 
@@ -304,7 +314,11 @@ public class SuggestionManager : MonoBehaviour
         }
 
         if (shownCard == null)
+        {
             Debug.Log("No one could disprove " + currentSuggester.name + "'s suggestion");
+            if (suggestionResultText != null)
+                suggestionResultText.text = "No one could disprove " + currentSuggester.name + "'s suggestion.";
+        }
 
         isWaitingForSuggestionResponse = false;
         yield return new WaitForSeconds(1f);

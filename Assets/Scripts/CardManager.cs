@@ -14,9 +14,13 @@ public class CardManager : MonoBehaviour
     [Header("The Winning Combo")]
     public List<Card> winningEnvelope = new List<Card>();
 
+    [HideInInspector]
+    public List<Card> fullDeck = new List<Card>();
+
     private void Awake()
     {
         SortDeck();
+        fullDeck = new List<Card>(allCards);
     }
 
     public void SortDeck()

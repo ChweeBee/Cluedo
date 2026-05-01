@@ -7,7 +7,7 @@ public class AIPlayer : CluedoPlayer
 
     public AIPlayer(string playerName)
     {
-        isHuman = false;
+        isAI = true;
         name = playerName;
         roomManager = FindFirstObjectByType<RoomManager>();
     }

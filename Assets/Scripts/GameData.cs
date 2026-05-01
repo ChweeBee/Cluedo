@@ -19,12 +19,17 @@ public class PlayerSetup
     public CharacterId character;
     public bool isCPU;
 
+    public bool IsAI { get => isCPU; set => isCPU = value; }
+
     // Persisted board position. -1,-1 means "no saved tile yet — use the spawner's default for this character".
     public int tileX = -1;
     public int tileY = -1;
 
     // Card names dealt to this player (matches Card.cardName).
     public List<string> handCardNames = new List<string>();
+
+    // Notebook entries this player has marked off (matches Card.cardName).
+    public List<string> notebookCheckedCardNames = new List<string>();
 
     public PlayerSetup() { }
 
@@ -72,6 +77,9 @@ public class GameSaveData
 
     // Names of players (CluedoPlayer transforms / CharacterId names) that have been eliminated by a wrong accusation.
     public List<string> eliminatedPlayerNames = new List<string>();
+
+    // Cards revealed face-up on the public table (matches Card.cardName).
+    public List<string> publicHandCardNames = new List<string>();
 
     public bool IsValid => players != null && players.Count >= 2;
 }
