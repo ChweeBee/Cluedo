@@ -156,29 +156,41 @@ public class GameManager : MonoBehaviour
         if (ShouldEndGame())
             return;
 
-        SetState(GameState.WaitingForRoll);
-        UpdateTurnUI();
-
-        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
-        int savedRoll = save != null ? save.lastDiceTotal : 0;
-        bool alreadyRolled = save != null && save.hasRolledThisTurn;
-
-        if (diceManager != null)
+        if (IsCurrentPlayerAI())
         {
-            if (savedRoll > 0)
-            {
-                diceManager.ApplySavedRoll(savedRoll);
-                if (rollResultText != null)
-                    rollResultText.text = BuildPostRollText(savedRoll);
-            }
+            var ai = turnManager.CurrentPlayer.GetComponent<AIPlayer>();
+            if (ai != null)
+                ai.PerformAITurn();
             else
+                Debug.LogWarning("[TurnManager] AI player missing AIPlayer component.");
+        }
+
+        else 
+        {
+            SetState(GameState.WaitingForRoll);
+            UpdateTurnUI();
+
+            GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+            int savedRoll = save != null ? save.lastDiceTotal : 0;
+            bool alreadyRolled = save != null && save.hasRolledThisTurn;
+
+            if (diceManager != null)
             {
-                diceManager.totalResult = 0;
-                if (alreadyRolled)
+                if (savedRoll > 0)
                 {
-                    SetState(GameState.PostMoveActions);
+                    diceManager.ApplySavedRoll(savedRoll);
                     if (rollResultText != null)
-                        rollResultText.text = BuildAlreadyMovedText();
+                        rollResultText.text = BuildPostRollText(savedRoll);
+                }
+                else
+                {
+                    diceManager.totalResult = 0;
+                    if (alreadyRolled)
+                    {
+                        SetState(GameState.PostMoveActions);
+                        if (rollResultText != null)
+                            rollResultText.text = BuildAlreadyMovedText();
+                    }
                 }
             }
         }
