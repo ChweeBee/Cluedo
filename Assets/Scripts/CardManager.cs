@@ -14,8 +14,6 @@ public class CardManager : MonoBehaviour
     [Header("The Winning Combo")]
     public List<Card> winningEnvelope = new List<Card>();
 
-    // Snapshot of every card taken before Envelope.Start removes the 3 winners.
-    // Use this for anything that needs the full 21 (e.g. the notebook).
     [HideInInspector]
     public List<Card> fullDeck = new List<Card>();
 

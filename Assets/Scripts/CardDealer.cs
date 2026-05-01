@@ -7,9 +7,9 @@ public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
     public Envelope envelope;
-    public Transform playerHand; // This is your main UI container
-    public Transform PublicHand;  // Optional UI container for the leftover "table" cards
-    public GameObject cardCanvas; // Hidden when the camera enters Idle mode
+    public Transform playerHand; 
+    public Transform PublicHand; 
+    public GameObject cardCanvas;
     public CameraController cameraController;
     public CluedoNotebook notebookManager;
 
@@ -92,8 +92,7 @@ public class CardDealer : MonoBehaviour
             remainingCards[randomIndex] = temp;
         }
 
-        // Standard Cluedo math: deal evenly; any leftover go to the public table.
-        // If PublicHand isn't wired, fall back to round-robin so no card is lost.
+
         int playerCount = allPlayers.Length;
         int cardsPerPlayer = PublicHand != null ? remainingCards.Count / playerCount : remainingCards.Count;
         int totalFairCards = PublicHand != null ? cardsPerPlayer * playerCount : remainingCards.Count;
@@ -164,7 +163,6 @@ public class CardDealer : MonoBehaviour
             return;
         }
 
-        // Fallback for older saves: compute leftover from allCards minus envelope minus dealt hands.
         HashSet<Card> dealt = new HashSet<Card>(cardManager.winningEnvelope);
         foreach (CluedoPlayer cp in allPlayers)
         {
@@ -227,9 +225,6 @@ public class CardDealer : MonoBehaviour
         return cardManager.allCards.Find(c => c != null && c.cardName == name);
     }
 
-    // Sync cardManager.winningEnvelope to the single source of truth (Envelope component or save.envelope).
-    // Envelope.Start runs before this (DealNextFrame yields a frame), so its cards are already chosen
-    // and removed from cardManager.allCards.
     void SyncEnvelopeFromGameState(GameSaveData save)
     {
         if (cardManager == null) return;
@@ -242,7 +237,6 @@ public class CardDealer : MonoBehaviour
             if (envelope.RoomCard != null) cardManager.winningEnvelope.Add(envelope.RoomCard);
         }
 
-        // Fallback: pull from save.envelope by name (e.g., if no Envelope component is in the scene yet).
         if (cardManager.winningEnvelope.Count < 3 && save != null && save.envelope != null && save.envelope.IsValid)
         {
             cardManager.winningEnvelope.Clear();
@@ -254,7 +248,6 @@ public class CardDealer : MonoBehaviour
             if (r != null) cardManager.winningEnvelope.Add(r);
         }
 
-        // Ensure save.envelope reflects the chosen cards (covers fresh-game runs where Envelope had no slot to persist to).
         if (save != null && save.slotIndex >= 0 && cardManager.winningEnvelope.Count == 3)
         {
             EnvelopeSolution sol = new EnvelopeSolution
@@ -266,20 +259,15 @@ public class CardDealer : MonoBehaviour
             if (sol.IsValid) save.envelope = sol;
         }
     }
-
-    // This clears the UI and refills it with a specific player's cards
     public void ShowHandByIndex(int index)
     {
         CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
         if (index < 0 || index >= allPlayers.Length) return;
 
-        // Ensure the hand is actually visible when we switch
         playerHand.gameObject.SetActive(true);
 
-        // Clear existing cards
         foreach (Transform child in playerHand) Destroy(child.gameObject);
 
-        // Add new cards
         foreach (Card card in allPlayers[index].hand)
         {
             Instantiate(card, playerHand);
@@ -290,8 +278,6 @@ public class CardDealer : MonoBehaviour
         if (notebookManager != null) notebookManager.ShowForPlayer(allPlayers[index]);
     }
 
-    // Wire to a UI Button OnClick (no-runtime dropdown). Toggles the public hand.
-    // Only opens when there are actually public cards to show.
     public void TogglePublicHand()
     {
         if (PublicHand == null) return;
@@ -305,7 +291,6 @@ public class CardDealer : MonoBehaviour
         if (PublicHand != null) PublicHand.gameObject.SetActive(false);
     }
 
-    // Hide-only: H always hides the hand, never reveals it.
     public void HideAllHands()
     {
         if (playerHand != null) playerHand.gameObject.SetActive(false);
@@ -320,7 +305,6 @@ public class CardDealer : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.H)) HideAllHands();
 
-        // 1 and 2 now trigger the "Refill UI" logic
         if (Input.GetKeyDown(KeyCode.Alpha1)) ShowHandByIndex(0);
         if (Input.GetKeyDown(KeyCode.Alpha2)) ShowHandByIndex(1);
         if (Input.GetKeyDown(KeyCode.Alpha3)) ShowHandByIndex(2);
