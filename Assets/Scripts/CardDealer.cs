@@ -11,6 +11,7 @@ public class CardDealer : MonoBehaviour
     public Transform PublicHand;  // Optional UI container for the leftover "table" cards
     public GameObject cardCanvas; // Hidden when the camera enters Idle mode
     public CameraController cameraController;
+    public CluedoNotebook notebookManager;
 
     private bool hasDealt = false;
     private readonly List<Card> publicCards = new List<Card>();
@@ -21,6 +22,14 @@ public class CardDealer : MonoBehaviour
     {
         if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
         if (envelope == null) envelope = FindAnyObjectByType<Envelope>();
+        if (notebookManager == null)
+        {
+            notebookManager = FindAnyObjectByType<CluedoNotebook>();
+            if (notebookManager == null) notebookManager = gameObject.AddComponent<CluedoNotebook>();
+        }
+        if (notebookManager != null && notebookManager.cardManager == null)
+            notebookManager.cardManager = cardManager;
+
         StartCoroutine(DealNextFrame());
     }
 
@@ -30,11 +39,28 @@ public class CardDealer : MonoBehaviour
         DealToAllPlayers();
     }
 
+    CluedoPlayer[] GetPlayersInTurnOrder()
+    {
+        CluedoPlayer[] live = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
+        GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
+        if (save == null || save.players == null || save.players.Count == 0) return live;
+
+        var byCharacter = new Dictionary<CharacterId, CluedoPlayer>();
+        foreach (var cp in live)
+            if (cp != null) byCharacter[cp.character] = cp;
+
+        var ordered = new List<CluedoPlayer>(save.players.Count);
+        foreach (var ps in save.players)
+            if (ps != null && byCharacter.TryGetValue(ps.character, out var cp)) ordered.Add(cp);
+
+        return ordered.ToArray();
+    }
+
     public void DealToAllPlayers()
     {
         if (hasDealt) { Debug.Log("Cards already dealt"); return; }
 
-        CluedoPlayer[] allPlayers = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
+        CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
         if (allPlayers.Length == 0) { Debug.LogError("No Players found in scene"); return; }
 
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
@@ -244,7 +270,7 @@ public class CardDealer : MonoBehaviour
     // This clears the UI and refills it with a specific player's cards
     public void ShowHandByIndex(int index)
     {
-        CluedoPlayer[] allPlayers = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
+        CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
         if (index < 0 || index >= allPlayers.Length) return;
 
         // Ensure the hand is actually visible when we switch
@@ -260,6 +286,8 @@ public class CardDealer : MonoBehaviour
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerHand.GetComponent<RectTransform>());
+
+        if (notebookManager != null) notebookManager.ShowForPlayer(allPlayers[index]);
     }
 
     // Wire to a UI Button OnClick (no-runtime dropdown). Toggles the public hand.
@@ -281,6 +309,7 @@ public class CardDealer : MonoBehaviour
     public void HideAllHands()
     {
         if (playerHand != null) playerHand.gameObject.SetActive(false);
+        if (notebookManager != null) notebookManager.Hide();
     }
 
     private void Update()

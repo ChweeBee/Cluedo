@@ -28,6 +28,9 @@ public class PlayerSetup
     // Card names dealt to this player (matches Card.cardName).
     public List<string> handCardNames = new List<string>();
 
+    // Notebook entries this player has marked off (matches Card.cardName).
+    public List<string> notebookCheckedCardNames = new List<string>();
+
     public PlayerSetup() { }
 
     public PlayerSetup(CharacterId character, bool isCPU)

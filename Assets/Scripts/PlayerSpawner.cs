@@ -59,6 +59,7 @@ public class PlayerSpawner : MonoBehaviour
             {
                 cluedoPlayer.character = setup.character;
                 cluedoPlayer.isAI = setup.isCPU;
+                cluedoPlayer.HydrateNotebookFromSave(setup.notebookCheckedCardNames);
             }
 
             spawned[setup.character] = go.transform;
