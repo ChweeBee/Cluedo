@@ -171,6 +171,13 @@ public class SuggestionManager : MonoBehaviour
 
     private void ShowCardChoicePanel(List<Card> matchingCards, System.Action<Card> onCardChosen)
     {
+        if (cardRevealPanel == null || cardButtonContainer == null || cardButtonPrefab == null)
+        {
+            Debug.LogWarning("[SuggestionManager] cardRevealPanel/container/prefab not wired — auto-picking first matching card.");
+            if (matchingCards != null && matchingCards.Count > 0) onCardChosen?.Invoke(matchingCards[0]);
+            return;
+        }
+
         cardRevealPanel.SetActive(true);
 
         foreach (Transform child in cardButtonContainer)
