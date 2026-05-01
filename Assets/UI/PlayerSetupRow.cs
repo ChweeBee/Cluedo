@@ -17,6 +17,7 @@ public class PlayerSetupRow : MonoBehaviour
     public CharacterId Character => (CharacterId)characterDropdown.value;
     public bool IsCPU => cpuToggle.isOn;
 
+    // wires the row to its owner controller and seeds dropdown values.
     public void Initialize(CharacterId character, bool isCPU, SetupMenuController owner)
     {
         this.owner = owner;
@@ -36,12 +37,14 @@ public class PlayerSetupRow : MonoBehaviour
         removeButton.onClick.AddListener(() => owner.RemoveRow(this));
     }
 
+    // forces the dropdown to a specific character id.
     public void SetCharacter(CharacterId id)
     {
         characterDropdown.value = (int)id;
         characterDropdown.RefreshShownValue();
     }
 
+    // returns a spaced version of the camelcase enum name for display.
     static string PrettyName(CharacterId id)
     {
         string raw = id.ToString();

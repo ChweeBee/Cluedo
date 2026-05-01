@@ -8,9 +8,7 @@ public enum CharacterId
     MissPeacock,
     MisterGreen,
     ProfessorPlum,
-    MissWhite,
-    MonsieurBrunette,
-    SargentGray
+    MissWhite
 }
 
 [Serializable]
@@ -31,8 +29,13 @@ public class PlayerSetup
     // Notebook entries this player has marked off (matches Card.cardName).
     public List<string> notebookCheckedCardNames = new List<string>();
 
+    // AI: cards this AI has shown to which asker for which combo, so it stays consistent across reloads.
+    public List<DisproveEntry> aiDisproveHistory = new List<DisproveEntry>();
+
+    // parameterless ctor required for jsonutility deserialization.
     public PlayerSetup() { }
 
+    // creates a player setup with the chosen character and ai flag.
     public PlayerSetup(CharacterId character, bool isCPU)
     {
         this.character = character;
@@ -40,6 +43,16 @@ public class PlayerSetup
     }
 
     public bool HasSavedTile => tileX >= 0 && tileY >= 0;
+}
+
+[Serializable]
+public class DisproveEntry
+{
+    public string askerCharacter;
+    public string suspectName;
+    public string weaponName;
+    public string roomName;
+    public string shownCardName;
 }
 
 [Serializable]
@@ -68,6 +81,9 @@ public class GameSaveData
 
     // Whether the current player has already rolled this turn. Locks out re-rolls across saves/reloads.
     public bool hasRolledThisTurn = false;
+
+    // Whether the current player has already used their one suggestion-or-accusation this turn.
+    public bool hasSuggestedOrAccusedThisTurn = false;
 
     // Whether cards have been dealt for this save (so we don't re-deal on reload).
     public bool cardsDealt = false;

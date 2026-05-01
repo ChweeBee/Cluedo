@@ -6,13 +6,16 @@ public static class SaveSystem
 {
     public const int SlotCount = 3;
 
+    // builds the on-disk file path for a save slot.
     static string PathFor(int slot) => Path.Combine(Application.persistentDataPath, $"save_{slot}.json");
 
+    // returns true if a save file exists for the given slot.
     public static bool Exists(int slot)
     {
         return slot >= 0 && slot < SlotCount && File.Exists(PathFor(slot));
     }
 
+    // serializes a save to disk in pretty-printed json.
     public static void Save(int slot, GameSaveData data)
     {
         if (slot < 0 || slot >= SlotCount) throw new ArgumentOutOfRangeException(nameof(slot));
@@ -25,6 +28,7 @@ public static class SaveSystem
         Debug.Log($"[SaveSystem] Saved slot {slot + 1} -> {PathFor(slot)}");
     }
 
+    // reads a slot off disk, returning null if missing or corrupt.
     public static GameSaveData Load(int slot)
     {
         if (!Exists(slot)) return null;
@@ -40,11 +44,13 @@ public static class SaveSystem
         }
     }
 
+    // removes the save file for the given slot if it exists.
     public static void Delete(int slot)
     {
         if (Exists(slot)) File.Delete(PathFor(slot));
     }
 
+    // returns a one-line summary string about a save slot for menu display.
     public static string DescribeSlot(int slot)
     {
         if (!Exists(slot)) return $"Slot {slot + 1}: <empty>";

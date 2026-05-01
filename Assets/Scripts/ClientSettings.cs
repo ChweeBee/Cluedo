@@ -22,6 +22,7 @@ public class ClientSettings : MonoBehaviour
 
     static string FilePath => Path.Combine(Application.persistentDataPath, "client_settings.json");
 
+    // enforces singleton behaviour and loads persisted settings.
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -35,6 +36,7 @@ public class ClientSettings : MonoBehaviour
         Apply();
     }
 
+    // returns the singleton, creating it on the fly if it doesn't exist.
     public static ClientSettings EnsureExists()
     {
         if (Instance != null) return Instance;
@@ -42,6 +44,7 @@ public class ClientSettings : MonoBehaviour
         return go.AddComponent<ClientSettings>();
     }
 
+    // reads settings from disk, falling back to defaults on failure.
     public void Load()
     {
         try
@@ -60,6 +63,7 @@ public class ClientSettings : MonoBehaviour
         }
     }
 
+    // writes the in-memory settings out to disk as json.
     public void Save()
     {
         try
@@ -73,12 +77,18 @@ public class ClientSettings : MonoBehaviour
         }
     }
 
+    // updates master volume and re-applies all settings.
     public void SetMasterVolume(float v) { Data.masterVolume = Mathf.Clamp01(v); Apply(); }
+    // updates music volume and re-applies all settings.
     public void SetMusicVolume(float v)  { Data.musicVolume  = Mathf.Clamp01(v); Apply(); }
+    // updates sfx volume and re-applies all settings.
     public void SetSfxVolume(float v)    { Data.sfxVolume    = Mathf.Clamp01(v); Apply(); }
+    // updates the idle camera timeout and re-applies all settings.
     public void SetIdleAfterSeconds(float s) { Data.idleAfterSeconds = Mathf.Max(0.5f, s); Apply(); }
+    // toggles fullscreen mode and re-applies all settings.
     public void SetFullscreen(bool on)   { Data.fullscreen = on; Apply(); }
 
+    // pushes the current settings into engine systems and notifies listeners.
     public void Apply()
     {
         AudioListener.volume = Data.masterVolume;

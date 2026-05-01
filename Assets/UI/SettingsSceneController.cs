@@ -40,6 +40,7 @@ public class SettingsSceneController : MonoBehaviour
     GameSaveData currentData;
     readonly List<PlayerCpuRow> rows = new List<PlayerCpuRow>();
 
+    // hooks up the save, back, and slot-changed callbacks.
     void Awake()
     {
         if (saveSlotButton != null) saveSlotButton.onClick.AddListener(OnSaveSlot);
@@ -47,14 +48,14 @@ public class SettingsSceneController : MonoBehaviour
         if (slotDropdown != null) slotDropdown.onValueChanged.AddListener(OnSlotChanged);
     }
 
+    // populates client-wide and per-save settings on first show.
     void Start()
     {
         BindClientSettings();
         BindSlotPicker();
     }
 
-    // ---------------- Client settings ----------------
-
+    // wires every client-wide control to the persistent settings object.
     void BindClientSettings()
     {
         settings = ClientSettings.EnsureExists();
@@ -96,19 +97,20 @@ public class SettingsSceneController : MonoBehaviour
         }
     }
 
+    // forwards idle slider changes to the settings object and label.
     void OnIdleChanged(float v)
     {
         settings.SetIdleAfterSeconds(v);
         UpdateIdleLabel(v);
     }
 
+    // formats the idle slider value for the inline label.
     void UpdateIdleLabel(float v)
     {
         if (idleValueLabel != null) idleValueLabel.text = $"{v:0.0}s";
     }
 
-    // ---------------- Per-save game settings ----------------
-
+    // populates the slot picker and selects the first non-empty slot.
     void BindSlotPicker()
     {
         RefreshSlotDropdown();
@@ -118,6 +120,7 @@ public class SettingsSceneController : MonoBehaviour
         LoadSlot(initial);
     }
 
+    // rebuilds the dropdown's slot descriptions while preserving the previous selection.
     void RefreshSlotDropdown()
     {
         if (slotDropdown == null) return;
@@ -130,8 +133,10 @@ public class SettingsSceneController : MonoBehaviour
         slotDropdown.RefreshShownValue();
     }
 
+    // dropdown selection callback that loads the chosen slot.
     void OnSlotChanged(int slot) => LoadSlot(slot);
 
+    // reads a slot off disk and rebuilds the per-save row list.
     void LoadSlot(int slot)
     {
         currentSlot = slot;
@@ -139,6 +144,7 @@ public class SettingsSceneController : MonoBehaviour
         Rebuild();
     }
 
+    // refreshes the per-save row container based on the loaded slot data.
     void Rebuild()
     {
         foreach (var r in rows) if (r != null) Destroy(r.gameObject);
@@ -157,6 +163,7 @@ public class SettingsSceneController : MonoBehaviour
         }
     }
 
+    // pushes per-row toggle state back into the slot data and writes it out.
     void OnSaveSlot()
     {
         if (currentData == null || currentSlot < 0) return;
@@ -166,8 +173,7 @@ public class SettingsSceneController : MonoBehaviour
         RefreshSlotDropdown();
     }
 
-    // ---------------- Exit ----------------
-
+    // saves client settings and returns to the main menu.
     public void Back()
     {
         if (settings != null) settings.Save();
@@ -182,6 +188,7 @@ public class PlayerCpuRow : MonoBehaviour
 
     public bool IsCPU => cpuToggle != null && cpuToggle.isOn;
 
+    // shows the player's display index and seeds the cpu toggle from save data.
     public void Bind(int index, PlayerSetup setup)
     {
         if (nameLabel != null) nameLabel.text = $"{index + 1}. {setup.character}";

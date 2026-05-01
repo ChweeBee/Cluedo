@@ -18,11 +18,12 @@ public class Tile : MonoBehaviour
     Color baseColor;
     bool isDoor;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // caches grid coords, the renderer, and whether this tile is a door.
     void Start()
     {
         SetCords();
 
+        // pick the first renderer that has a tintable colour property.
         foreach (Renderer r in GetComponentsInChildren<Renderer>())
         {
             if (r.sharedMaterial == null) continue;
@@ -42,6 +43,7 @@ public class Tile : MonoBehaviour
             }
         }
 
+        // tiles flagged blocked are removed from the walkable graph.
         if(blocked)
         {
             gridManager.BlockNode(cords);
@@ -51,6 +53,7 @@ public class Tile : MonoBehaviour
         isDoor = roomManager != null && roomManager.IsDoorTile(cords);
     }
 
+    // tints the tile each frame based on path and explored flags from pathfinding.
     void Update()
     {
         if (cachedRenderer == null || gridManager == null) return;
@@ -64,6 +67,7 @@ public class Tile : MonoBehaviour
         if (cachedRenderer.material.GetColor(colorProperty) != target) cachedRenderer.material.SetColor(colorProperty, target);
     }
 
+    // resolves and stores the grid coordinate based on world position.
     private void SetCords()
     {
         gridManager = FindAnyObjectByType<GridManager>();

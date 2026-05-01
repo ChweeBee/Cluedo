@@ -11,8 +11,9 @@ public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
     public Envelope envelope;
-    public Transform playerHand; 
-    public Transform PublicHand; 
+    public Transform playerHand;
+    public Transform PublicHand;
+    public GameObject publicHandToggleButton;
     public GameObject cardCanvas;
     public CameraController cameraController;
     public CluedoNotebook notebookManager;
@@ -23,6 +24,7 @@ public class CardDealer : MonoBehaviour
     //checks if any player hand is open on screen
     public bool IsHandVisible => playerHand != null && playerHand.gameObject.activeSelf;
 
+    // wires up scene refs and schedules the deal for the next frame.
     private void Start()
     {
         if (cameraController == null) cameraController = FindAnyObjectByType<CameraController>();
@@ -38,13 +40,14 @@ public class CardDealer : MonoBehaviour
         StartCoroutine(DealNextFrame());
     }
 
+    // waits one frame so all players are spawned, then deals.
     private IEnumerator DealNextFrame()
     {
         yield return null;
         DealToAllPlayers();
     }
 
-    //sorts players based on turn order stored in save file
+    // returns players in stable save-file order, picking the data-holder over the ai sibling.
     CluedoPlayer[] GetPlayersInTurnOrder()
     {
         CluedoPlayer[] live = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
@@ -53,7 +56,13 @@ public class CardDealer : MonoBehaviour
 
         var byCharacter = new Dictionary<CharacterId, CluedoPlayer>();
         foreach (var cp in live)
-            if (cp != null) byCharacter[cp.character] = cp;
+        {
+            if (cp == null) continue;
+            // Prefer the non-AIPlayer "data holder" so hand/notebook lookups are stable.
+            bool existing = byCharacter.TryGetValue(cp.character, out var prior);
+            if (!existing) byCharacter[cp.character] = cp;
+            else if (prior is AIPlayer && !(cp is AIPlayer)) byCharacter[cp.character] = cp;
+        }
 
         var ordered = new List<CluedoPlayer>(save.players.Count);
         foreach (var ps in save.players)
@@ -62,6 +71,7 @@ public class CardDealer : MonoBehaviour
         return ordered.ToArray();
     }
 
+    // shuffles and distributes the deck once per game, or restores from save if already dealt.
     public void DealToAllPlayers()
     {
         if (hasDealt) { Debug.Log("Cards already dealt"); return; }
@@ -71,7 +81,7 @@ public class CardDealer : MonoBehaviour
 
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
 
-        //restore cards from save file if game is already in progress
+        // if a deal already happened, just rebuild from saved data.
         if (save != null && save.cardsDealt && HasAnySavedHands(save))
         {
             RestoreSavedHands(save, allPlayers);
@@ -85,14 +95,14 @@ public class CardDealer : MonoBehaviour
         hasDealt = true;
         SyncEnvelopeFromGameState(save);
 
-        //Filters out cards already in envelope
+        // remove the three envelope cards before dealing the rest.
         List<Card> remainingCards = new List<Card>();
         foreach (Card c in cardManager.allCards)
         {
             if (!cardManager.winningEnvelope.Contains(c)) remainingCards.Add(c);
         }
 
-        //shuffle remaining cards
+        // fisher-yates shuffle.
         for (int i = 0; i < remainingCards.Count; i++)
         {
             Card temp = remainingCards[i];
@@ -101,7 +111,7 @@ public class CardDealer : MonoBehaviour
             remainingCards[randomIndex] = temp;
         }
 
-        //split cards among players, any extra go to public hand
+        // split as evenly as possible, leftovers go into the public hand.
         int playerCount = allPlayers.Length;
         int cardsPerPlayer = PublicHand != null ? remainingCards.Count / playerCount : remainingCards.Count;
         int totalFairCards = PublicHand != null ? cardsPerPlayer * playerCount : remainingCards.Count;
@@ -127,7 +137,7 @@ public class CardDealer : MonoBehaviour
         Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({publicCards.Count} public).");
     }
 
-    //checks if there are any saved hands from save state
+    // returns true when at least one player has saved hand data.
     bool HasAnySavedHands(GameSaveData save)
     {
         if (save == null || save.players == null) return false;
@@ -138,7 +148,7 @@ public class CardDealer : MonoBehaviour
         return false;
     }
 
-    //restores hands if saved
+    // rebuilds player hands and the public hand from the save file.
     void RestoreSavedHands(GameSaveData save, CluedoPlayer[] allPlayers)
     {
         foreach (CluedoPlayer cp in allPlayers) cp.hand.Clear();
@@ -159,6 +169,7 @@ public class CardDealer : MonoBehaviour
         RebuildPublicHand(save, allPlayers);
     }
 
+    // refills the public-hand area, preferring the save list and falling back to leftovers.
     void RebuildPublicHand(GameSaveData save, CluedoPlayer[] allPlayers)
     {
         ClearPublicHand();
@@ -186,7 +197,7 @@ public class CardDealer : MonoBehaviour
         }
     }
 
-    //clears public hand
+    // empties the public hand container.
     void ClearPublicHand()
     {
         publicCards.Clear();
@@ -194,6 +205,7 @@ public class CardDealer : MonoBehaviour
         foreach (Transform child in PublicHand) Destroy(child.gameObject);
     }
 
+    // instantiates a single public card under the public hand transform.
     void SpawnPublicCard(Card card)
     {
         if (PublicHand == null || card == null) return;
@@ -204,6 +216,7 @@ public class CardDealer : MonoBehaviour
         Debug.Log("Public Card Spawned: " + card.cardName);
     }
 
+    // serializes every player's hand and the public hand back to the save slot.
     void PersistDealtHands(GameSaveData save, CluedoPlayer[] allPlayers)
     {
         if (save == null || save.slotIndex < 0) return;
@@ -231,12 +244,14 @@ public class CardDealer : MonoBehaviour
         SaveSystem.Save(save.slotIndex, save);
     }
 
+    // looks up a card object in the master deck by display name.
     Card FindCardByName(string name)
     {
         if (cardManager == null || string.IsNullOrEmpty(name)) return null;
         return cardManager.allCards.Find(c => c != null && c.cardName == name);
     }
 
+    // reconciles the live envelope, the scene envelope, and the saved envelope.
     void SyncEnvelopeFromGameState(GameSaveData save)
     {
         if (cardManager == null) return;
@@ -272,7 +287,7 @@ public class CardDealer : MonoBehaviour
         }
     }
 
-    //displays hands for specific players
+    // builds and shows the hand panel for the player at the given turn index.
     public void ShowHandByIndex(int index)
     {
         CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
@@ -292,6 +307,7 @@ public class CardDealer : MonoBehaviour
         if (notebookManager != null) notebookManager.ShowForPlayer(allPlayers[index]);
     }
 
+    // flips visibility of the public-hand panel.
     public void TogglePublicHand()
     {
         if (PublicHand == null) return;
@@ -300,20 +316,24 @@ public class CardDealer : MonoBehaviour
         PublicHand.gameObject.SetActive(willShow);
     }
 
+    // hides the public-hand panel.
     void HidePublicHand()
     {
         if (PublicHand != null) PublicHand.gameObject.SetActive(false);
     }
 
+    // hides the player hand panel and the notebook.
     public void HideAllHands()
     {
         if (playerHand != null) playerHand.gameObject.SetActive(false);
         if (notebookManager != null) notebookManager.Hide();
     }
 
+    // refreshes canvas visibility and listens for hand hotkeys.
     private void Update()
     {
         RefreshCardCanvasVisibility();
+        RefreshPublicHandButton();
 
         if (PauseManager.IsGamePaused) return;
 
@@ -328,6 +348,7 @@ public class CardDealer : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha6)) ShowHandByIndex(5);
     }
 
+    // hides the card canvas while the camera is in idle mode.
     void RefreshCardCanvasVisibility()
     {
         if (cardCanvas == null) return;
@@ -335,5 +356,15 @@ public class CardDealer : MonoBehaviour
         bool show = cameraController == null || cameraController.CurrentMode != CameraController.CameraMode.Idle;
         if (cardCanvas.activeSelf != show)
             cardCanvas.SetActive(show);
+    }
+
+    // hides the public-hand toggle button when no public cards exist.
+    void RefreshPublicHandButton()
+    {
+        if (publicHandToggleButton == null) return;
+
+        bool show = publicCards.Count > 0;
+        if (publicHandToggleButton.activeSelf != show)
+            publicHandToggleButton.SetActive(show);
     }
 }

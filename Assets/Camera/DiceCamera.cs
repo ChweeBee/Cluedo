@@ -28,16 +28,19 @@ public class DiceCamera : MonoBehaviour
     float angleB;
     bool active;
 
+    // hides the dice canvas and cameras at scene start.
     void Awake()
     {
         SetVisible(false);
     }
 
+    // overload that uses the inspector-assigned dice transforms.
     public void Show()
     {
         Show(dieA, dieB);
     }
 
+    // points the orbit cameras at two dice and reveals the canvas.
     public void Show(Transform a, Transform b)
     {
         dieA = a;
@@ -48,12 +51,14 @@ public class DiceCamera : MonoBehaviour
         SetVisible(true);
     }
 
+    // hides the dice canvas and stops the orbit update.
     public void Hide()
     {
         active = false;
         SetVisible(false);
     }
 
+    // toggles the canvas and both render cameras together.
     void SetVisible(bool on)
     {
         if (canvas != null) canvas.enabled = on;
@@ -61,6 +66,7 @@ public class DiceCamera : MonoBehaviour
         if (dieCameraB != null) dieCameraB.enabled = on;
     }
 
+    // orbits both cameras around their dice each frame while active.
     void LateUpdate()
     {
         if (!active) return;
@@ -68,6 +74,7 @@ public class DiceCamera : MonoBehaviour
         UpdateOrbit(dieCameraB, dieB, ref angleB);
     }
 
+    // advances one camera's orbit angle and repositions it.
     void UpdateOrbit(Camera cam, Transform die, ref float angle)
     {
         if (cam == null || die == null) return;

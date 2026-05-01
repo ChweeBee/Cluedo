@@ -6,6 +6,7 @@ public class BoardSceneBootstrap : MonoBehaviour
     [Tooltip("If no save is active when this scene loads, fall back to this slot index (0 = Slot 1). Useful for hitting Play directly on the Board scene.")]
     [SerializeField] int fallbackSlot = 0;
 
+    // when the board scene starts without an active save, auto-load the fallback slot.
     void Awake()
     {
         var bootstrap = GameBootstrap.EnsureExists();

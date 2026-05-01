@@ -6,11 +6,13 @@ public class BounceText : MonoBehaviour
     public float bounceSpeed = 2f;
     private float originalY;
 
+    // remembers the starting y so the bounce stays centred there.
     void Start()
     {
         originalY = transform.position.y;
     }
 
+    // applies a sine-wave vertical offset each frame.
     void Update()
     {
         Vector3 pos = transform.position;

@@ -27,6 +27,7 @@ public class CameraController : MonoBehaviour
     Vector3 lastMousePosition;
     Transform pendingMoveTarget;
 
+    // resolves the per-mode behaviour components.
     void Awake()
     {
         if (defaultBehaviour == null) defaultBehaviour = GetComponent<CameraDefault>();
@@ -34,6 +35,7 @@ public class CameraController : MonoBehaviour
         if (moveBehaviour == null) moveBehaviour = GetComponent<CameraMove>();
     }
 
+    // initialises input timers and enters the configured starting mode.
     void Start()
     {
         lastMousePosition = Input.mousePosition;
@@ -44,6 +46,7 @@ public class CameraController : MonoBehaviour
     float EffectiveIdleAfterSeconds =>
         ClientSettings.Instance != null ? ClientSettings.Instance.Data.idleAfterSeconds : idleAfterSeconds;
 
+    // tracks input activity and toggles between default and idle when needed.
     void Update()
     {
         if (PauseManager.IsGamePaused) return;
@@ -51,6 +54,7 @@ public class CameraController : MonoBehaviour
         bool inputThisFrame = DetectInput();
         if (inputThisFrame) lastInputTime = Time.time;
 
+        // drop into idle after the configured inactivity window.
         if (CurrentMode == CameraMode.Default && Time.time - lastInputTime >= EffectiveIdleAfterSeconds)
         {
             SetMode(CameraMode.Idle);
@@ -61,6 +65,7 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    // returns true when any keyboard, mouse-button, scroll, or motion input occurs this frame.
     bool DetectInput()
     {
         if (Input.anyKeyDown) return true;
@@ -76,6 +81,7 @@ public class CameraController : MonoBehaviour
         return false;
     }
 
+    // switches to a new camera mode by exiting the old one and entering the new.
     public void SetMode(CameraMode mode)
     {
         if (mode == CurrentMode) return;
@@ -84,23 +90,25 @@ public class CameraController : MonoBehaviour
         CurrentMode = mode;
         EnterMode(mode);
 
-        // Reset the inactivity timer on any mode change so we don't immediately re-trigger.
+        // reset the inactivity timer so default doesn't immediately retrigger idle.
         lastInputTime = Time.time;
     }
 
+    // bumps the idle timer back to now, used after dice rolls and movement.
     public void ResetIdleTimer()
     {
         lastInputTime = Time.time;
         lastMousePosition = Input.mousePosition;
     }
 
+    // requests the move-mode camera to focus on the given target.
     public void BeginMove(Transform target)
     {
         if (target == null) return;
         pendingMoveTarget = target;
         if (CurrentMode == CameraMode.Move)
         {
-            // Already in Move; just retarget without re-entering.
+            // already in move, just retarget without re-entering.
             if (moveBehaviour != null) moveBehaviour.BeginMove(target);
         }
         else
@@ -109,6 +117,7 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    // dispatches the start-of-mode hook to the matching behaviour component.
     void EnterMode(CameraMode mode)
     {
         switch (mode)
@@ -130,6 +139,7 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    // dispatches the end-of-mode hook to the matching behaviour component.
     void ExitMode(CameraMode mode)
     {
         switch (mode)

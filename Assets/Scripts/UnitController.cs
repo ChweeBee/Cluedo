@@ -27,7 +27,7 @@ public class UnitController : MonoBehaviour
 
 
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // grabs scene managers and snaps every player onto their nearest tile.
     void Start()
     {
         roomManager = FindAnyObjectByType<RoomManager>();
@@ -39,6 +39,7 @@ public class UnitController : MonoBehaviour
 
         if (turnManager != null)
         {
+            // align every player to the grid so logical and visual tiles match.
             foreach (Transform p in turnManager.Players)
             {
                 SnapToNearestTile(p, force: true);
@@ -48,6 +49,7 @@ public class UnitController : MonoBehaviour
         }
     }
 
+    // returns true if another player is sitting on the given tile.
     bool IsTileOccupied(Vector2Int cords, Transform excludeUnit)
     {
         if (turnManager == null) return false;
@@ -62,6 +64,7 @@ public class UnitController : MonoBehaviour
         return false;
     }
 
+    // pulls a unit onto its nearest tile centre if it has drifted too far.
     void SnapToNearestTile(Transform unit, bool force)
     {
         if (unit == null || gridManager == null) return;
@@ -80,7 +83,7 @@ public class UnitController : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
+    // handles all input for selecting a unit, picking a destination, and confirming a move.
     void Update()
     {
         if (PauseManager.IsGamePaused) return;
@@ -186,6 +189,46 @@ public class UnitController : MonoBehaviour
     }
     */
 
+    // drives an ai unit through the regular pathfinding and movement pipeline.
+    public bool RunAIMove(Transform unit, Vector2Int targetCords, int stepBudget, System.Action onComplete)
+    {
+        if (unit == null || gridManager == null || pathFinder == null) { onComplete?.Invoke(); return false; }
+
+        // run the same bfs a human selection would use.
+        Vector2Int startCords = GetLogicalTileFor(unit);
+        pathFinder.SetNewDestination(startCords, targetCords);
+        List<Node> newPath = pathFinder.GetNewPath(startCords);
+
+        if (newPath == null || newPath.Count == 0) { onComplete?.Invoke(); return false; }
+
+        // path is seed plus targets, so visible moves equal nodes minus one.
+        int maxNodes = stepBudget > 0 ? stepBudget + 1 : newPath.Count;
+        if (newPath.Count > maxNodes)
+            newPath = newPath.GetRange(0, maxNodes);
+
+        selectedUnit = unit;
+        unitSelected = true;
+        if (cameraController != null) cameraController.BeginMove(unit);
+
+        path.Clear();
+        path = newPath;
+        pendingTargetCords = newPath[newPath.Count - 1].cords;
+
+        moveInProgress = true;
+        if (diceManager != null) diceManager.totalResult = 0;
+        StopAllCoroutines();
+        StartCoroutine(FollowPathThenInvoke(onComplete));
+        return true;
+    }
+
+    // wraps followpath so callers can be notified when the walk finishes.
+    IEnumerator FollowPathThenInvoke(System.Action onComplete)
+    {
+        yield return FollowPath();
+        onComplete?.Invoke();
+    }
+
+    // commits the previewed path and starts walking the unit along it.
     void ConfirmPendingMove()
     {
         if (selectedUnit == null || diceManager == null) return;
@@ -199,6 +242,7 @@ public class UnitController : MonoBehaviour
         StartCoroutine(FollowPath());
     }
 
+    // walks the selected unit along the queued path and finalises the turn at the end.
     IEnumerator FollowPath()
     {
         // turn on walking animation on the selected unit only
@@ -275,6 +319,7 @@ public class UnitController : MonoBehaviour
             turnManager.NextTurn();
     }
 
+    // animates a single hop to one tile, used for the room slot shuffle after entering.
     IEnumerator WalkToTile(Vector2Int tile)
     {
         if (selectedUnit == null || gridManager == null) yield break;
@@ -301,6 +346,7 @@ public class UnitController : MonoBehaviour
         }
     }
 
+    // waits for the camera pan, then highlights every tile within the dice budget.
     IEnumerator ShowReachableAfterPan()
     {
         yield return new WaitForSeconds(highlightDelay);
@@ -323,6 +369,7 @@ public class UnitController : MonoBehaviour
         }
     }
 
+    // resolves a unit to its logical tile, falling back to a world position lookup.
     Vector2Int GetLogicalTileFor(Transform unit)
     {
         if (turnManager != null && turnManager.TryGetLogicalTile(unit, out Vector2Int tile))

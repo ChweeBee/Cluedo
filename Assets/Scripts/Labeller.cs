@@ -14,6 +14,7 @@ public class Labeller : MonoBehaviour
     static bool labelsHidden = true;
     static int lastToggleFrame = -1;
 
+    // grabs the gridmanager and label, then writes initial coords.
     private void Awake()
     {
         gridManager = FindAnyObjectByType<GridManager>();
@@ -22,6 +23,7 @@ public class Labeller : MonoBehaviour
         DisplayCords();
     }
 
+    // refreshes label text and listens for the c hotkey toggle.
     private void Update()
     {
         if (!Application.isPlaying)
@@ -37,6 +39,7 @@ public class Labeller : MonoBehaviour
         if (Application.isPlaying) label.enabled = !labelsHidden;
     }
 
+    // recomputes the coords from world position and pushes them into the label.
     private void DisplayCords()
     {
         if (!gridManager) { return; }
@@ -47,6 +50,7 @@ public class Labeller : MonoBehaviour
         label.text = $"{cords.x}, {cords.y}";
     }
 
+    // flips the global label visibility flag when c is pressed.
     void ToggleLabels()
     {
         if (PauseManager.IsGamePaused) return;

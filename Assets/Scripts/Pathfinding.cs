@@ -32,6 +32,7 @@ public class Pathfinding : MonoBehaviour
         get { return targetCords; } 
     }
 
+    // grabs the grid manager and shares its node dictionary.
     private void Awake()
     {
         gridManager = FindAnyObjectByType<GridManager>();
@@ -41,11 +42,13 @@ public class Pathfinding : MonoBehaviour
         }
     }
 
+    // lazily resolves the roommanager when first needed.
     private void EnsureRoomManager()
     {
         if (roomManager == null) roomManager = FindAnyObjectByType<RoomManager>();
     }
 
+    // returns the tiles bfs should start from, using room doors when starting in a room.
     List<Vector2Int> GetSeedTiles(Vector2Int origin)
     {
         List<Vector2Int> seeds = new List<Vector2Int>();
@@ -68,11 +71,13 @@ public class Pathfinding : MonoBehaviour
         return seeds;
     }
 
+    // overload that uses the configured startcords field.
     public List<Node> GetNewPath()
     {
         return GetNewPath(startCords);
     }
 
+    // runs bfs from the given coords and returns the resulting path.
     public List<Node> GetNewPath(Vector2Int coordinates)
     {
         gridManager.ResetPath();
@@ -81,6 +86,7 @@ public class Pathfinding : MonoBehaviour
         return BuildPath();
     }
 
+    // bfs flood that stops once the target is dequeued.
     void BreadthFirstSearch(Vector2Int coordinates)
     {
         frontier.Clear();
@@ -88,6 +94,7 @@ public class Pathfinding : MonoBehaviour
 
         bool isRunning = true;
 
+        // seed the search with door tiles when starting inside a room.
         List<Vector2Int> seeds = GetSeedTiles(coordinates);
         if (seeds.Count == 0) return;
 
@@ -114,6 +121,7 @@ public class Pathfinding : MonoBehaviour
         }
     }
 
+    // queues every walkable, unvisited neighbour of the current node.
     void ExploreNeighbours()
     {
         List<Node> neighbours = new List<Node>();
@@ -139,6 +147,7 @@ public class Pathfinding : MonoBehaviour
         }
     }
 
+    // walks the connectto chain back from the target to produce a forward path.
     List<Node> BuildPath()
     {
         List <Node> path = new List<Node>();
@@ -158,11 +167,13 @@ public class Pathfinding : MonoBehaviour
         return path;
     }
 
+    // tells subscribers to recompute their path because the grid changed.
     public void NotifyRecievers()
     {
         BroadcastMessage("RecalculatePath", false, SendMessageOptions.DontRequireReceiver);
     }
 
+// flood-fills outward from the origin and flags every tile within the step budget.
 public void MarkReachable(Vector2Int origin, int maxSteps)
 {
     gridManager.ResetNodes();
@@ -202,6 +213,7 @@ public void MarkReachable(Vector2Int origin, int maxSteps)
     }
 }
 
+// stores start and target tiles, validates them, and triggers a fresh path build.
 public void SetNewDestination(Vector2Int startCoordinates, Vector2Int targetCoordinates)
 {
     startCords = startCoordinates;

@@ -10,6 +10,7 @@ public class Node
     public bool path;
     public Node connectTo;
 
+    // creates a graph node at the given coords and walkability.
     public Node(Vector2Int cords, bool walkable)
     {
         this.cords = cords;

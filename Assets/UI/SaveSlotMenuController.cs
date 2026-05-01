@@ -15,6 +15,7 @@ public class SaveSlotMenuController : MonoBehaviour
     [SerializeField] GameObject mainMenuPanel;
     [SerializeField] string boardSceneName = "Board";
 
+    // wires per-slot load and delete buttons plus the back button.
     void Awake()
     {
         for (int i = 0; i < SaveSystem.SlotCount; i++)
@@ -28,11 +29,13 @@ public class SaveSlotMenuController : MonoBehaviour
         if (backButton != null) backButton.onClick.AddListener(OnBack);
     }
 
+    // refreshes slot info every time the panel becomes visible.
     void OnEnable()
     {
         Refresh();
     }
 
+    // updates labels and toggles button interactability based on whether each slot has data.
     void Refresh()
     {
         for (int i = 0; i < SaveSystem.SlotCount; i++)
@@ -47,6 +50,7 @@ public class SaveSlotMenuController : MonoBehaviour
         }
     }
 
+    // loads the chosen slot, marks it active, and switches to the board scene.
     void OnLoad(int slot)
     {
         var data = SaveSystem.Load(slot);
@@ -61,12 +65,14 @@ public class SaveSlotMenuController : MonoBehaviour
         SceneManager.LoadScene(boardSceneName);
     }
 
+    // wipes the chosen slot from disk and refreshes the panel.
     void OnDelete(int slot)
     {
         SaveSystem.Delete(slot);
         Refresh();
     }
 
+    // returns to the main menu panel.
     void OnBack()
     {
         if (loadPanel != null) loadPanel.SetActive(false);

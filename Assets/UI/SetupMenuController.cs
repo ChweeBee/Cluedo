@@ -28,6 +28,7 @@ public class SetupMenuController : MonoBehaviour
 
     readonly List<PlayerSetupRow> rows = new List<PlayerSetupRow>();
 
+    // wires up the setup buttons before the panel is shown.
     void Awake()
     {
         if (addPlayerButton != null) addPlayerButton.onClick.AddListener(OnAddPlayer);
@@ -35,6 +36,7 @@ public class SetupMenuController : MonoBehaviour
         if (backButton != null) backButton.onClick.AddListener(OnBack);
     }
 
+    // populates the slot dropdown and seeds default player rows when shown.
     void OnEnable()
     {
         RefreshSlotDropdown();
@@ -52,6 +54,7 @@ public class SetupMenuController : MonoBehaviour
         SetStatus("");
     }
 
+    // rebuilds the save-slot dropdown options from disk.
     void RefreshSlotDropdown()
     {
         if (saveSlotDropdown == null) return;
@@ -65,6 +68,7 @@ public class SetupMenuController : MonoBehaviour
         saveSlotDropdown.RefreshShownValue();
     }
 
+    // appends a new player row using the next unused character.
     void OnAddPlayer()
     {
         if (rows.Count >= maxPlayers) return;
@@ -72,6 +76,7 @@ public class SetupMenuController : MonoBehaviour
         UpdateAddButton();
     }
 
+    // returns the first character id not already assigned to a row.
     CharacterId NextUnusedCharacter()
     {
         var used = new HashSet<CharacterId>();
@@ -81,6 +86,7 @@ public class SetupMenuController : MonoBehaviour
         return CharacterId.MissScarlet;
     }
 
+    // instantiates a player row prefab and tracks it.
     void AddRow(CharacterId character, bool isCPU)
     {
         var row = Instantiate(rowPrefab, rowContainer);
@@ -88,6 +94,7 @@ public class SetupMenuController : MonoBehaviour
         rows.Add(row);
     }
 
+    // removes a player row, blocked once the minimum player count is reached.
     public void RemoveRow(PlayerSetupRow row)
     {
         if (rows.Count <= minPlayers)
@@ -100,6 +107,7 @@ public class SetupMenuController : MonoBehaviour
         UpdateAddButton();
     }
 
+    // shifts a row up or down in the visible list, used by the row reorder buttons.
     public void MoveRow(PlayerSetupRow row, int delta)
     {
         int idx = rows.IndexOf(row);
@@ -113,11 +121,13 @@ public class SetupMenuController : MonoBehaviour
             rows[i].transform.SetSiblingIndex(i);
     }
 
+    // disables the add-player button once the player cap is hit.
     void UpdateAddButton()
     {
         if (addPlayerButton != null) addPlayerButton.interactable = rows.Count < maxPlayers;
     }
 
+    // validates the setup, builds a new save, and loads the board scene.
     void OnStartGame()
     {
         if (rows.Count < minPlayers)
@@ -126,6 +136,7 @@ public class SetupMenuController : MonoBehaviour
             return;
         }
 
+        // detect duplicate character picks before saving anything.
         var seen = new HashSet<CharacterId>();
         foreach (var r in rows)
         {
@@ -150,12 +161,14 @@ public class SetupMenuController : MonoBehaviour
         SceneManager.LoadScene(boardSceneName);
     }
 
+    // returns from the setup panel to the main menu.
     void OnBack()
     {
         if (setupPanel != null) setupPanel.SetActive(false);
         if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
     }
 
+    // updates the inline status label and mirrors the message to the console.
     void SetStatus(string message)
     {
         if (statusLabel != null) statusLabel.text = message;

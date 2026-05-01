@@ -21,14 +21,14 @@ public class CardManager : MonoBehaviour
     [HideInInspector]
     public List<Card> fullDeck = new List<Card>();
 
+    // sorts the deck on boot and snapshots a backup of the full card list.
     private void Awake()
     {
-        //organises the deck when the game starts
         SortDeck();
         fullDeck = new List<Card>(allCards);
     }
 
-    //interates through allCards and sorts them into sub-decks
+    // splits the master deck into per-type sub-decks for the rest of the game.
     public void SortDeck()
     {
         suspectDeck.Clear();

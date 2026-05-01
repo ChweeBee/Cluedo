@@ -13,20 +13,21 @@ public class DiceManager : MonoBehaviour
 
     private bool rolling = false;
 
+    // currently a placeholder for future setup work.
     void Start() { }
 
+    // listens for the space hotkey and polls dice settling each frame.
     void Update()
     {
         if (PauseManager.IsGamePaused) return;
 
-        //check for roll input
         if (Input.GetKeyDown(KeyCode.Space) && CanRoll())
             RollDice();
 
         GetResults();
     }
 
-    //logic to detect when dice stop moving and hide camera
+    // detects when both dice have settled and stores the total.
     public void GetResults()
     {
         if (!rolling) return;
@@ -40,13 +41,14 @@ public class DiceManager : MonoBehaviour
         }
     }
 
+    // hides the dice camera a few seconds after the dice settle.
     IEnumerator HideDiceCameraAfterDelay()
     {
         yield return new WaitForSeconds(diceCameraHoldSeconds);
         if (diceCamera != null) diceCamera.Hide();
     }
 
-    //checks for a legal roll
+    // returns true only when a fresh roll is allowed by the current game state.
     public bool CanRoll()
     {
         if (rolling) return false;
@@ -63,7 +65,7 @@ public class DiceManager : MonoBehaviour
         return true;
     }
 
-    //triggers roll and camera focus
+    // launches both dice and switches to the dice camera.
     public void RollDice()
     {
         if (!CanRoll()) return;
@@ -76,7 +78,7 @@ public class DiceManager : MonoBehaviour
         if (diceCamera != null) diceCamera.Show(dice1.transform, dice2.transform);
     }
 
-    //restores roll from save data
+    // restores a previously rolled total from the save file.
     public void ApplySavedRoll(int total)
     {
         rolling = false;

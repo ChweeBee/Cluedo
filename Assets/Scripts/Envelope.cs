@@ -31,24 +31,26 @@ public class Envelope : MonoBehaviour
     public Card RoomCard => roomCard;
     public bool IsRevealed => isRevealed;
     
+    // hides the envelope panel before any other script runs.
     void Awake()
     {
         if (envelopePanel != null) envelopePanel.SetActive(false);
     }
 
+    // wires up references and seeds or restores the envelope solution.
     void Start()
     {
         if (cardManager == null) cardManager = FindAnyObjectByType<CardManager>();
 
         if (envelopePanel != null) envelopePanel.SetActive(false);
-        
+
         if (revealButton != null) revealButton.onClick.AddListener(RevealEnvelope);
         if (closeButton != null) closeButton.onClick.AddListener(CloseEnvelope);
-        
-        // Initialize the envelope with random solution cards
+
         InitializeEnvelope();
     }
-    
+
+    // picks the three secret cards either from the save file or by random.
     private void InitializeEnvelope()
     {
         if (cardManager == null)
@@ -62,6 +64,7 @@ public class Envelope : MonoBehaviour
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
         EnvelopeSolution saved = save != null ? save.envelope : null;
 
+        // restore from the save if a valid solution is stored, otherwise roll a fresh one.
         if (saved != null && saved.IsValid)
         {
             suspectCard = FindCardByName(cardManager.suspectDeck, saved.suspectCardName);
@@ -92,6 +95,7 @@ public class Envelope : MonoBehaviour
             Debug.Log($"Envelope initialized: {suspectCard?.cardName} with {weaponCard?.cardName} in the {roomCard?.cardName}");
         }
 
+        // pull the envelope cards out of the dealable pool.
         if (suspectCard != null) cardManager.allCards.Remove(suspectCard);
         if (weaponCard != null) cardManager.allCards.Remove(weaponCard);
         if (roomCard != null) cardManager.allCards.Remove(roomCard);
@@ -99,12 +103,14 @@ public class Envelope : MonoBehaviour
         cardManager.SortDeck();
     }
 
+    // looks up a card by name in a single deck list.
     private static Card FindCardByName(List<Card> deck, string name)
     {
         if (deck == null || string.IsNullOrEmpty(name)) return null;
         return deck.Find(c => c != null && c.cardName == name);
     }
     
+    // shows the secret solution panel, but only after the game ends.
     public void RevealEnvelope()
     {
         if (gameOver)
@@ -121,24 +127,28 @@ public class Envelope : MonoBehaviour
         }
     }
     
+    // copies the solution into the on-screen text fields.
     private void UpdateEnvelopeDisplay()
     {
         if (suspectText != null) suspectText.text = $"Suspect: {suspectCard?.cardName ?? "Unknown"}";
         if (weaponText != null) weaponText.text = $"Weapon: {weaponCard?.cardName ?? "Unknown"}";
         if (roomText != null) roomText.text = $"Room: {roomCard?.cardName ?? "Unknown"}";
     }
-    
+
+    // hides the envelope panel.
     private void CloseEnvelope()
     {
         if (envelopePanel != null) envelopePanel.SetActive(false);
     }
-    
+
+    // flags the envelope as revealable once a winner has been declared.
     public void SetGameOver(bool isGameOver)
     {
         gameOver = isGameOver;
         if (gameOver) isRevealed = true;
     }
 
+// returns true if all three accused cards match the envelope solution.
 public bool CheckAccusation(Card accusedSuspect, Card accusedWeapon, Card accusedRoom)
 {
     bool isCorrect = (accusedSuspect?.cardName == suspectCard?.cardName && 
@@ -155,7 +165,7 @@ public bool CheckAccusation(Card accusedSuspect, Card accusedWeapon, Card accuse
 }
 
     
-    // Method to visually show the envelope (optional animation)
+    // shows the envelope panel from external triggers.
     public void ShowEnvelope()
     {
         if (envelopePanel != null && !envelopePanel.activeSelf)
@@ -164,7 +174,8 @@ public bool CheckAccusation(Card accusedSuspect, Card accusedWeapon, Card accuse
             envelopePanel.SetActive(true);
         }
     }
-    
+
+    // hides the envelope panel from external triggers.
     public void HideEnvelope()
     {
         if (envelopePanel != null) envelopePanel.SetActive(false);

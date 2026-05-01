@@ -46,6 +46,7 @@ public class TurnManager : MonoBehaviour
 
     public bool IsCurrentPlayerAI => IsAI(CurrentPlayer);
 
+    // returns true if the given transform belongs to an ai player.
     public bool IsAI(Transform unit)
     {
         if (unit == null) return false;
@@ -54,6 +55,7 @@ public class TurnManager : MonoBehaviour
         return IsAI(NameToCharacter(unit.name));
     }
 
+    // returns true if the given character is configured as ai in the save.
     public bool IsAI(CharacterId character)
     {
         if (data == null) return false;
@@ -61,11 +63,19 @@ public class TurnManager : MonoBehaviour
         return setup != null && setup.isCPU;
     }
 
+    // converts a transform name back into a characterid enum value.
     static CharacterId NameToCharacter(string name)
     {
         return System.Enum.TryParse(name, out CharacterId id) ? id : default;
     }
 
+    // loads the save before playerspawner runs so isai lookups work.
+    void Awake()
+    {
+        LoadSaveDataIfAvailable();
+    }
+
+    // re-loads the save and logs the starting player.
     void Start()
     {
         LoadSaveDataIfAvailable();
@@ -76,6 +86,7 @@ public class TurnManager : MonoBehaviour
             Debug.Log("[TurnManager] Starting player: " + CurrentPlayer.name);
     }
 
+    // pulls the active save in and clamps the turn index to a valid range.
     private void LoadSaveDataIfAvailable()
     {
         if (
@@ -91,8 +102,12 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    // accepts the live transforms from playerspawner and reconciles them with save data.
     public void RegisterSpawnedPlayers(IReadOnlyDictionary<CharacterId, Transform> spawned)
     {
+        // playerspawner runs before our start so the save may not be loaded yet.
+        if (data == null) LoadSaveDataIfAvailable();
+
         liveTransforms.Clear();
         logicalTiles.Clear();
 
@@ -104,9 +119,9 @@ public class TurnManager : MonoBehaviour
             Transform t = kvp.Value;
             var aiComp = t.GetComponent<AIPlayer>();
 
+            // toggle the aiplayer component based on save flag.
             if (aiComp != null)
             {
-                // True for AI, false for humans
                 aiComp.enabled = IsAI(kvp.Key);
             }
 
@@ -119,12 +134,14 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    // stores the logical tile for a unit so future lookups bypass world-position math.
     public void SetLogicalTile(Transform unit, Vector2Int tile)
     {
         if (unit == null) return;
         logicalTiles[unit] = tile;
     }
 
+    // tries to read the logical tile for a unit, returns false when unknown.
     public bool TryGetLogicalTile(Transform unit, out Vector2Int tile)
     {
         if (unit != null && logicalTiles.TryGetValue(unit, out tile)) return true;
@@ -132,6 +149,7 @@ public class TurnManager : MonoBehaviour
         return false;
     }
 
+    // updates the logical tile and persists the new position into the save file.
     public void RecordPlayerTile(CharacterId character, Vector2Int tile)
     {
         if (liveTransforms.TryGetValue(character, out Transform t) && t != null)
@@ -149,6 +167,7 @@ public class TurnManager : MonoBehaviour
         SaveCurrentData();
     }
 
+    // advances to the next player and writes the new turn index to disk.
     public void NextTurn()
     {
         if (PlayerCount == 0) return;
@@ -165,6 +184,7 @@ public class TurnManager : MonoBehaviour
             Debug.Log("[TurnManager] Turn -> " + CurrentPlayer.name);
     }
 
+    // bumps the turn index past any eliminated players.
     public void SkipEliminatedPlayers()
     {
         if (GameManager.Instance == null) return;
@@ -182,12 +202,14 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    // persists the current save back to disk if a slot is set.
     private void SaveCurrentData()
     {
         if (data != null && data.slotIndex >= 0)
             SaveSystem.Save(data.slotIndex, data);
     }
 
+    // resolves a characterid to a live transform, falling back to a scene name lookup.
     private Transform ResolveTransform(CharacterId id)
     {
         if (liveTransforms.TryGetValue(id, out Transform t) && t != null)

@@ -13,11 +13,13 @@ public class DiceRoller : MonoBehaviour
     
     private bool hasInitialised = false;
 
+    // initialises the rigidbody on first run.
     void Start()
     {
         Initialise();
     }
-    
+
+    // grabs or adds the rigidbody and stashes the starting position.
     void Initialise()
     {
         rb = GetComponent<Rigidbody>();
@@ -33,15 +35,15 @@ public class DiceRoller : MonoBehaviour
         hasInitialised = true;
     }
 
+    // figures out which face is pointing up after the dice settles.
     void DetermineFinishedSide()
     {
         float closestDot = -1f;
         string resultLabel = "Unknown";
 
-        // Safety check
         try
         {
-            // Checking all directions
+            // check every face direction against world up.
             CheckDirection(transform.up, "2", ref closestDot, ref resultLabel);
             CheckDirection(-transform.up, "5", ref closestDot, ref resultLabel);
             CheckDirection(transform.right, "4", ref closestDot, ref resultLabel);
@@ -58,18 +60,17 @@ public class DiceRoller : MonoBehaviour
         }
     }
 
+    // ticks the roll timer and finalises the result once the dice has stopped moving.
     void Update()
     {
         if (!hasInitialised) return;
-        
-        // If rolling count down the timer
+
         if (isRolling)
         {
             timer += Time.deltaTime;
-            // Only check if stopped after delay
+            // wait at least rolldelay before checking velocities.
             if (timer > rollDelay)
             {
-                // Check if rigidbody exists and has stopped moving
                 if (rb != null)
                 {
                     if (rb.linearVelocity.magnitude < 0.2f && rb.angularVelocity.magnitude < 0.2f)
@@ -89,7 +90,7 @@ public class DiceRoller : MonoBehaviour
         }
     }
 
-    // Main method that deals with rolling
+    // resets the dice and launches it with a random impulse and torque.
     public void StartRoll()
     {
         // Make sure we're initialised
@@ -121,6 +122,7 @@ public class DiceRoller : MonoBehaviour
         rb.AddTorque(Random.insideUnitSphere * 15f, ForceMode.Impulse);
     }
 
+    // tracks the face whose normal is closest to world up.
     void CheckDirection(Vector3 sideDirection, string label, ref float closestDot, ref string resultLabel)
     {
         float dot = Vector3.Dot(sideDirection, Vector3.up);
@@ -132,6 +134,7 @@ public class DiceRoller : MonoBehaviour
         }
     }
 
+    // returns true once the dice has settled, with a fallback random face if it stalls.
     public bool HasFinishedRolling()
     {
         if (isRolling && timer > rollDelay + 3f)

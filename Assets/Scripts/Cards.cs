@@ -21,6 +21,7 @@ public class Card : MonoBehaviour
     public TextMeshProUGUI nameLabel;
     public Image artworkDisplay;
 
+    // editor-time hook that keeps the card label and artwork tint in sync with its type.
     private void OnValidate()
     {
         if (nameLabel != null)

@@ -22,11 +22,13 @@ public class PlayerSpawner : MonoBehaviour
 
     public IReadOnlyDictionary<CharacterId, Transform> Spawned => spawned;
 
+    // spawns every saved player at their start tile and registers them with turnmanager.
     void Awake()
     {
         if (gridManager == null) gridManager = FindAnyObjectByType<GridManager>();
         if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
 
+        // bail out cleanly when there is no active save to spawn from.
         var data = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
         if (data == null || !data.IsValid)
         {
@@ -34,6 +36,7 @@ public class PlayerSpawner : MonoBehaviour
             return;
         }
 
+        // build one transform per saved player and stash it in the spawned dictionary.
         foreach (var setup in data.players)
         {
             var entry = characters.Find(c => c.character == setup.character);
@@ -54,13 +57,24 @@ public class PlayerSpawner : MonoBehaviour
             var go = Instantiate(entry.prefab, worldPos, Quaternion.identity, parent);
             go.name = setup.character.ToString();
 
-            var cluedoPlayer = go.GetComponent<CluedoPlayer>();
-            if (cluedoPlayer != null)
+            // Prefabs carry both a CluedoPlayer and an AIPlayer (derives from CluedoPlayer);
+            // set fields on every one so neither holds default values, and hydrate notebook on the data-holder.
+            var cluedoComponents = go.GetComponents<CluedoPlayer>();
+            CluedoPlayer dataHolder = null;
+            foreach (var cp in cluedoComponents)
             {
-                cluedoPlayer.character = setup.character;
-                cluedoPlayer.isAI = setup.isCPU;
-                cluedoPlayer.HydrateNotebookFromSave(setup.notebookCheckedCardNames);
+                if (cp == null) continue;
+                cp.character = setup.character;
+                cp.isAI = setup.isCPU;
+                if (dataHolder == null && !(cp is AIPlayer)) dataHolder = cp;
             }
+            if (dataHolder == null && cluedoComponents.Length > 0) dataHolder = cluedoComponents[0];
+            if (dataHolder != null) dataHolder.HydrateNotebookFromSave(setup.notebookCheckedCardNames);
+
+            // Set AIPlayer.enabled directly here — TurnManager.RegisterSpawnedPlayers does it too,
+            // but at that point TurnManager.data isn't loaded yet, so it sees isAI=false for all players.
+            var aiComp = go.GetComponent<AIPlayer>();
+            if (aiComp != null) aiComp.enabled = setup.isCPU;
 
             spawned[setup.character] = go.transform;
         }

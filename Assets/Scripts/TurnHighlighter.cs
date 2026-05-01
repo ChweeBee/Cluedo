@@ -11,11 +11,13 @@ public class TurnHighlighter : MonoBehaviour
     private Transform currentTarget;
     private readonly List<GameObject> activeClones = new List<GameObject>();
 
+    // resolves the turnmanager reference if it was not wired in the inspector.
     void Start()
     {
         if (turnManager == null) turnManager = FindAnyObjectByType<TurnManager>();
     }
 
+    // checks each frame whether the active player changed and updates the highlight.
     void LateUpdate()
     {
         if (turnManager == null || highlightMaterial == null) return;
@@ -27,16 +29,19 @@ public class TurnHighlighter : MonoBehaviour
         ApplyHighlight(active);
     }
 
+    // wipes the highlight when this component is disabled.
     void OnDisable()
     {
         ClearHighlight();
     }
 
+    // wipes the highlight on destruction so clones don't leak.
     void OnDestroy()
     {
         ClearHighlight();
     }
 
+    // spawns highlight-coloured clones over each renderer of the active player.
     private void ApplyHighlight(Transform target)
     {
         currentTarget = target;
@@ -58,6 +63,7 @@ public class TurnHighlighter : MonoBehaviour
         }
     }
 
+    // builds a skinned-mesh clone using the highlight material.
     private GameObject CloneSkinned(SkinnedMeshRenderer source)
     {
         GameObject go = new GameObject(HighlightChildName);
@@ -81,6 +87,7 @@ public class TurnHighlighter : MonoBehaviour
         return go;
     }
 
+    // builds a static-mesh clone using the highlight material.
     private GameObject CloneMesh(MeshRenderer source)
     {
         MeshFilter sourceFilter = source.GetComponent<MeshFilter>();
@@ -104,6 +111,7 @@ public class TurnHighlighter : MonoBehaviour
         return go;
     }
 
+    // destroys every active highlight clone and forgets the current target.
     private void ClearHighlight()
     {
         for (int i = 0; i < activeClones.Count; i++)

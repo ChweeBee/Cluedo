@@ -12,11 +12,13 @@ public class GridManager : MonoBehaviour
     Dictionary<Vector2Int, Node> grid = new Dictionary<Vector2Int, Node>();
     public Dictionary<Vector2Int, Node> Grid { get { return grid; } }
 
+    // builds the logical grid before anything else uses it.
     private void Awake()
     {
         CreateGrid();
     }
 
+    // returns the node at given coords or null if out of range.
     public Node GetNode(Vector2Int coordinates)
     {
         if (grid.ContainsKey(coordinates))
@@ -27,6 +29,7 @@ public class GridManager : MonoBehaviour
         return null;
     }
 
+    // marks a tile as non-walkable for pathfinding.
     public void BlockNode(Vector2Int coordinates)
     {
         if (grid.ContainsKey(coordinates))
@@ -35,6 +38,7 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // clears explored, path, and connectto state on every node.
     public void ResetNodes()
     {
         foreach (KeyValuePair<Vector2Int, Node> entry in grid)
@@ -45,6 +49,7 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // clears just the path-related flags, leaving exploration intact.
     public void ResetPath()
     {
         foreach (KeyValuePair<Vector2Int, Node> entry in grid)
@@ -54,6 +59,7 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // converts a world position to its nearest grid coordinate.
     public Vector2Int GetCoordinatesFromPosition(Vector3 position)
     {
         Vector2Int coordinates = new Vector2Int();
@@ -63,6 +69,7 @@ public class GridManager : MonoBehaviour
 
         return coordinates;
     }
+    // converts a grid coordinate to its world position centre.
     public Vector3 GetPositionFromCoordinates(Vector2Int coordinates)
     {
         Vector3 position = new Vector3();
@@ -72,6 +79,7 @@ public class GridManager : MonoBehaviour
         return position;
     }
 
+    // populates the grid dictionary with one walkable node per tile.
     private void CreateGrid()
     {
         for (int x = 0; x < gridSize.x; x++)

@@ -13,8 +13,10 @@ public class CluedoPlayer : MonoBehaviour
     [HideInInspector]
     public HashSet<string> notebookChecked = new HashSet<string>();
 
+    // returns true if a card is ticked off in this player's notebook.
     public bool IsCardChecked(string cardName) => notebookChecked.Contains(cardName);
 
+    // toggles a card in the notebook and writes the change to the save file.
     public void MarkCardChecked(string cardName, bool isChecked)
     {
         if (string.IsNullOrEmpty(cardName)) return;
@@ -26,6 +28,7 @@ public class CluedoPlayer : MonoBehaviour
         if (changed) PersistNotebookToSave();
     }
 
+    // restores the notebook state from a list of saved card names.
     public void HydrateNotebookFromSave(IEnumerable<string> cardNames)
     {
         notebookChecked.Clear();
@@ -34,6 +37,7 @@ public class CluedoPlayer : MonoBehaviour
             if (!string.IsNullOrEmpty(n)) notebookChecked.Add(n);
     }
 
+    // pushes the in-memory notebook back into the player's save slot.
     void PersistNotebookToSave()
     {
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;

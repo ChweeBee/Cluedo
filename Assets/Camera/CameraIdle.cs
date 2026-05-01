@@ -43,6 +43,7 @@ public class CameraIdle : MonoBehaviour
     bool hasLastMove;
     Coroutine loop;
 
+    // refreshes points of interest and starts the idle camera coroutine.
     public void BeginIdle()
     {
         EndIdle();
@@ -50,6 +51,7 @@ public class CameraIdle : MonoBehaviour
         loop = StartCoroutine(IdleLoop());
     }
 
+    // stops the idle coroutine if one is running.
     public void EndIdle()
     {
         if (loop != null)
@@ -59,6 +61,7 @@ public class CameraIdle : MonoBehaviour
         }
     }
 
+    // cycles spectator-style framing moves on random points of interest.
     IEnumerator IdleLoop()
     {
         while (true)
@@ -73,7 +76,7 @@ public class CameraIdle : MonoBehaviour
             IdleMove move = PickMove();
             float duration = Random.Range(minMoveDuration, maxMoveDuration);
 
-            // Spectator-style hard cut into the new shot.
+            // hard cut into the new framing.
             SnapToFraming(target, Random.Range(0f, 360f));
 
             switch (move)
@@ -91,6 +94,7 @@ public class CameraIdle : MonoBehaviour
         }
     }
 
+    // rebuilds the cached points-of-interest list from objects sharing the configured tag.
     void RefreshTargets()
     {
         if (string.IsNullOrEmpty(pointOfInterestTag))
@@ -104,6 +108,7 @@ public class CameraIdle : MonoBehaviour
         for (int i = 0; i < found.Length; i++) cachedTargets[i] = found[i].transform;
     }
 
+    // chooses a random idle move that is not the previous one.
     IdleMove PickMove()
     {
         int count = System.Enum.GetValues(typeof(IdleMove)).Length;
@@ -113,6 +118,7 @@ public class CameraIdle : MonoBehaviour
         return (IdleMove)(((int)lastMove + offset) % count);
     }
 
+    // chooses a random point-of-interest target, avoiding the previous one.
     Transform PickTarget()
     {
         if (cachedTargets == null || cachedTargets.Length == 0) return null;
@@ -128,9 +134,10 @@ public class CameraIdle : MonoBehaviour
 
     // -- Behaviours --------------------------------------------------------
 
+    // sweeps the camera through a random arc around the target.
     IEnumerator PanAround(Transform target, float duration)
     {
-        // Hard cut to a starting angle, then arc around the target by a random sweep.
+        // hard cut to a starting angle, then arc by a random sweep.
         float startAngle = AngleAround(target, transform.position);
         float sweep = Random.Range(panMinArc, panMaxArc) * (Random.value < 0.5f ? -1f : 1f);
 
@@ -146,6 +153,7 @@ public class CameraIdle : MonoBehaviour
         }
     }
 
+    // continuously orbits the target at a randomised angular speed.
     IEnumerator Orbit(Transform target, float duration)
     {
         float angularSpeed = Random.Range(orbitMinSpeed, orbitMaxSpeed) * (Random.value < 0.5f ? -1f : 1f);
@@ -162,6 +170,7 @@ public class CameraIdle : MonoBehaviour
         }
     }
 
+    // creeps the camera closer to the target over the duration.
     IEnumerator SlowZoomIn(Transform target, float duration)
     {
         Vector3 startPos = transform.position;
@@ -179,6 +188,7 @@ public class CameraIdle : MonoBehaviour
         }
     }
 
+    // retreats the camera away from the target over the duration.
     IEnumerator PullBack(Transform target, float duration)
     {
         Vector3 startPos = transform.position;
@@ -199,24 +209,28 @@ public class CameraIdle : MonoBehaviour
 
     // -- Helpers -----------------------------------------------------------
 
+    // hard-snaps the camera to a framing pose at the given orbit angle.
     void SnapToFraming(Transform target, float angleDegrees)
     {
         transform.position = target.position + FramingOffset(angleDegrees);
         FaceTargetInstant(target);
     }
 
+    // returns the world-space offset for an orbit angle and the configured framing.
     Vector3 FramingOffset(float angleDegrees)
     {
         float r = angleDegrees * Mathf.Deg2Rad;
         return new Vector3(Mathf.Cos(r) * framingDistance, framingHeight, Mathf.Sin(r) * framingDistance);
     }
 
+    // returns the orbit angle a world position sits at relative to the target.
     float AngleAround(Transform target, Vector3 worldPos)
     {
         Vector3 d = worldPos - target.position;
         return Mathf.Atan2(d.z, d.x) * Mathf.Rad2Deg;
     }
 
+    // rotates the camera to look directly at the target without smoothing.
     void FaceTargetInstant(Transform target)
     {
         Vector3 dir = target.position - transform.position;

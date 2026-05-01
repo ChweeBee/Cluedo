@@ -7,6 +7,7 @@ public class BoardGenerator : MonoBehaviour
     [SerializeField] private int height = 25;
     [SerializeField] private float spacing = 1f;
 
+    // editor menu helper that lays out a fresh grid of tile prefabs.
     [ContextMenu("Generate Board")]
     private void GenerateBoard()
     {
@@ -23,6 +24,7 @@ public class BoardGenerator : MonoBehaviour
         }
     }
 
+    // editor menu helper that wipes every child tile under this transform.
     [ContextMenu("Clear Board")]
     private void ClearBoard()
     {

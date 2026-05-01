@@ -17,6 +17,7 @@ public class CluedoNotebook : MonoBehaviour
     CluedoPlayer activePlayer;
     bool built;
 
+    // grabs the cardmanager, builds the panel once, and starts hidden.
     void Awake()
     {
         if (cardManager == null) cardManager = FindFirstObjectByType<CardManager>();
@@ -24,6 +25,7 @@ public class CluedoNotebook : MonoBehaviour
         Hide();
     }
 
+    // shows the notebook for the given player and rebuilds rows for their state.
     public void ShowForPlayer(CluedoPlayer player)
     {
         if (player == null) return;
@@ -33,6 +35,7 @@ public class CluedoNotebook : MonoBehaviour
         if (panel != null) panel.SetActive(true);
     }
 
+    // closes the notebook panel.
     public void Hide()
     {
         if (panel != null) panel.SetActive(false);
@@ -40,10 +43,12 @@ public class CluedoNotebook : MonoBehaviour
 
     public bool IsVisible => panel != null && panel.activeSelf;
 
+    // procedurally builds the canvas, panel, and scrollview if they don't already exist.
     public void EnsureBuilt()
     {
         if (built && panel != null && contentArea != null) return;
 
+        // find an existing canvas or create a fresh overlay one.
         Canvas canvas = FindFirstObjectByType<Canvas>();
         if (canvas == null)
         {
@@ -54,6 +59,7 @@ public class CluedoNotebook : MonoBehaviour
             canvas.sortingOrder = 50;
         }
 
+        // build the right-edge panel that holds the rows.
         if (panel == null)
         {
             panel = new GameObject("NotebookPanel",
@@ -70,6 +76,7 @@ public class CluedoNotebook : MonoBehaviour
             panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.78f);
         }
 
+        // build the scrollrect, mask, content child, and layout group.
         if (contentArea == null)
         {
             var scrollGO = new GameObject("Scroll",
@@ -119,14 +126,17 @@ public class CluedoNotebook : MonoBehaviour
         built = true;
     }
 
+    // populates the scrollview with one row per card, grouped by type and sorted alphabetically.
     void BuildRowsFor(CluedoPlayer player)
     {
         if (contentArea == null || cardManager == null) return;
 
+        // wipe any rows from a previous player.
         foreach (Transform child in contentArea) Destroy(child.gameObject);
 
         BuildHeader(player.character + "'s Notebook");
 
+        // prefer the full pre-envelope deck so all 21 cards always appear.
         List<Card> source = cardManager.fullDeck != null && cardManager.fullDeck.Count > 0
             ? cardManager.fullDeck
             : cardManager.allCards;
@@ -137,6 +147,7 @@ public class CluedoNotebook : MonoBehaviour
             .ThenBy(c => c.cardName)
             .ToList();
 
+        // emit a section header each time the type changes.
         Card.CardType? lastType = null;
         foreach (Card card in sorted)
         {
@@ -160,12 +171,14 @@ public class CluedoNotebook : MonoBehaviour
         }
     }
 
+    // routes a row's toggle change back to the active player's notebook state.
     void OnRowToggled(string cardName, bool isChecked)
     {
         if (activePlayer == null) return;
         activePlayer.MarkCardChecked(cardName, isChecked);
     }
 
+    // returns the human-readable section title for a card type.
     static string SectionTitle(Card.CardType type)
     {
         switch (type)
@@ -177,6 +190,7 @@ public class CluedoNotebook : MonoBehaviour
         }
     }
 
+    // adds a bold section header row to the scrollview.
     void BuildHeader(string title)
     {
         var headerGO = new GameObject("Header_" + title,
@@ -194,6 +208,7 @@ public class CluedoNotebook : MonoBehaviour
         label.alignment = TextAlignmentOptions.Left;
     }
 
+    // builds a single row with a checkbox and label when no prefab is provided.
     GameObject BuildProceduralRow(Transform parent)
     {
         var rowGO = new GameObject("Row",
