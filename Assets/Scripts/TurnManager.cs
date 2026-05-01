@@ -101,6 +101,14 @@ public class TurnManager : MonoBehaviour
         foreach (var kvp in spawned)
         {
             liveTransforms[kvp.Key] = kvp.Value;
+            Transform t = kvp.Value;
+            var aiComp = t.GetComponent<AIPlayer>();
+
+            if (aiComp != null)
+            {
+                // True for AI, false for humans
+                aiComp.enabled = IsAI(kvp.Key);
+            }
 
             if (data != null)
             {
