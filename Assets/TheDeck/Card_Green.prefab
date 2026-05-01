@@ -18,7 +18,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8500215760463562864, guid: c05d602e38258d34ca14bf095a193859, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Green
       objectReference: {fileID: 0}
     - target: {fileID: 8881757285432779321, guid: c05d602e38258d34ca14bf095a193859, type: 3}
       propertyPath: m_Pivot.x
@@ -46,11 +46,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8881757285432779321, guid: c05d602e38258d34ca14bf095a193859, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 8881757285432779321, guid: c05d602e38258d34ca14bf095a193859, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 8881757285432779321, guid: c05d602e38258d34ca14bf095a193859, type: 3}
       propertyPath: m_LocalPosition.x

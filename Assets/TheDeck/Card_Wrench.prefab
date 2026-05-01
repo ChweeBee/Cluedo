@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7302739659000934759, guid: 4e0fd1c1e3ca0124e87282915043c4fd, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Wrench
       objectReference: {fileID: 0}
     - target: {fileID: 7776600569380510510, guid: 4e0fd1c1e3ca0124e87282915043c4fd, type: 3}
       propertyPath: m_Pivot.x
@@ -42,11 +42,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7776600569380510510, guid: 4e0fd1c1e3ca0124e87282915043c4fd, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 7776600569380510510, guid: 4e0fd1c1e3ca0124e87282915043c4fd, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 7776600569380510510, guid: 4e0fd1c1e3ca0124e87282915043c4fd, type: 3}
       propertyPath: m_LocalPosition.x

@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2539209062552937569, guid: 9f9572d03b0247640ba1f6d1bf019289, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Plum
       objectReference: {fileID: 0}
     - target: {fileID: 3011332653975306408, guid: 9f9572d03b0247640ba1f6d1bf019289, type: 3}
       propertyPath: suspect
@@ -50,11 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3281320050291985960, guid: 9f9572d03b0247640ba1f6d1bf019289, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 3281320050291985960, guid: 9f9572d03b0247640ba1f6d1bf019289, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 3281320050291985960, guid: 9f9572d03b0247640ba1f6d1bf019289, type: 3}
       propertyPath: m_LocalPosition.x

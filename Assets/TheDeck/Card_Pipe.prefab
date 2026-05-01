@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2356566257496632551, guid: 793c30db58cf53b44a7f17246d0feee1, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Pipe
       objectReference: {fileID: 0}
     - target: {fileID: 3045355490341161006, guid: 793c30db58cf53b44a7f17246d0feee1, type: 3}
       propertyPath: weapon
@@ -50,11 +50,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3314850011114423982, guid: 793c30db58cf53b44a7f17246d0feee1, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 3314850011114423982, guid: 793c30db58cf53b44a7f17246d0feee1, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 3314850011114423982, guid: 793c30db58cf53b44a7f17246d0feee1, type: 3}
       propertyPath: m_LocalPosition.x

@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 6010608413296618864, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Conservatory
       objectReference: {fileID: 0}
     - target: {fileID: 6457751378140121529, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
       propertyPath: room
@@ -46,11 +46,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6763696916852770617, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 6763696916852770617, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 6763696916852770617, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
       propertyPath: m_LocalPosition.x
@@ -103,6 +103,14 @@ PrefabInstance:
     - target: {fileID: 8082688431367830531, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
       propertyPath: m_text
       value: Conservatory
+      objectReference: {fileID: 0}
+    - target: {fileID: 8082688431367830531, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
+      propertyPath: m_fontSize
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 8082688431367830531, guid: b8b2dfb8a82d6834491dfbcf2b899237, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 24
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

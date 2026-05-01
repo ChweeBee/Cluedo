@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_text
       value: Candlestick
       objectReference: {fileID: 0}
+    - target: {fileID: 5092798587941223794, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
+      propertyPath: m_fontSize
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 5092798587941223794, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 24
+      objectReference: {fileID: 0}
     - target: {fileID: 5149177995723293383, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_Color.b
       value: 0.5
@@ -26,7 +34,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7345304580395805697, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Candlestick
       objectReference: {fileID: 0}
     - target: {fileID: 7735848916606010952, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_Pivot.x
@@ -54,11 +62,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7735848916606010952, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 7735848916606010952, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 7735848916606010952, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -122,7 +130,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8981709976678191390, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 10
+      value: 27.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8981709976678191390, guid: ec84543f91291c948a1776bc9f64868b, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -75
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5910561195299115388, guid: 4beeee06a5947ed4aa52d984b60d8eb5, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Study
       objectReference: {fileID: 0}
     - target: {fileID: 6409178893320926645, guid: 4beeee06a5947ed4aa52d984b60d8eb5, type: 3}
       propertyPath: room
@@ -46,11 +46,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6679412279616600885, guid: 4beeee06a5947ed4aa52d984b60d8eb5, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 6679412279616600885, guid: 4beeee06a5947ed4aa52d984b60d8eb5, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 6679412279616600885, guid: 4beeee06a5947ed4aa52d984b60d8eb5, type: 3}
       propertyPath: m_LocalPosition.x

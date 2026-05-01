@@ -24,6 +24,14 @@ PrefabInstance:
       propertyPath: m_text
       value: Mrs. White
       objectReference: {fileID: 0}
+    - target: {fileID: 1083415234114764144, guid: df6eb7f2abcb0c7489ed970b8e64a64d, type: 3}
+      propertyPath: m_fontSize
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1083415234114764144, guid: df6eb7f2abcb0c7489ed970b8e64a64d, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 2521752617224537674, guid: df6eb7f2abcb0c7489ed970b8e64a64d, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -50,11 +58,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2521752617224537674, guid: df6eb7f2abcb0c7489ed970b8e64a64d, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 2521752617224537674, guid: df6eb7f2abcb0c7489ed970b8e64a64d, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 2521752617224537674, guid: df6eb7f2abcb0c7489ed970b8e64a64d, type: 3}
       propertyPath: m_LocalPosition.x

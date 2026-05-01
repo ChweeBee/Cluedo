@@ -14,7 +14,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7429580568696240146, guid: fd40fe4b140ee9748b252f7481a99c51, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Peacock
       objectReference: {fileID: 0}
     - target: {fileID: 7615496994020545115, guid: fd40fe4b140ee9748b252f7481a99c51, type: 3}
       propertyPath: m_Pivot.x
@@ -42,11 +42,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7615496994020545115, guid: fd40fe4b140ee9748b252f7481a99c51, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 7615496994020545115, guid: fd40fe4b140ee9748b252f7481a99c51, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 7615496994020545115, guid: fd40fe4b140ee9748b252f7481a99c51, type: 3}
       propertyPath: m_LocalPosition.x

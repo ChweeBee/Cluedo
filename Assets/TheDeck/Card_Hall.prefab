@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 378620024338945588, guid: e46e914593556fd4990a04a0bd80b62f, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Hall
       objectReference: {fileID: 0}
     - target: {fileID: 861774007211162749, guid: e46e914593556fd4990a04a0bd80b62f, type: 3}
       propertyPath: m_Pivot.x
@@ -38,11 +38,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 861774007211162749, guid: e46e914593556fd4990a04a0bd80b62f, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 861774007211162749, guid: e46e914593556fd4990a04a0bd80b62f, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 861774007211162749, guid: e46e914593556fd4990a04a0bd80b62f, type: 3}
       propertyPath: m_LocalPosition.x

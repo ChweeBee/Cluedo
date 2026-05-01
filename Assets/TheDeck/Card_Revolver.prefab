@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5802564781479762224, guid: 0ea923c64993fc94aa2f15edd0392016, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Revolver
       objectReference: {fileID: 0}
     - target: {fileID: 6517178996652457465, guid: 0ea923c64993fc94aa2f15edd0392016, type: 3}
       propertyPath: weapon
@@ -46,11 +46,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6787588674040492921, guid: 0ea923c64993fc94aa2f15edd0392016, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 6787588674040492921, guid: 0ea923c64993fc94aa2f15edd0392016, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 6787588674040492921, guid: 0ea923c64993fc94aa2f15edd0392016, type: 3}
       propertyPath: m_LocalPosition.x

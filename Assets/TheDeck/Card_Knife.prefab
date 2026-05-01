@@ -38,11 +38,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5270714309681397318, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 5270714309681397318, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 5270714309681397318, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -111,6 +111,18 @@ PrefabInstance:
     - target: {fileID: 7265245673411052924, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
       propertyPath: m_text
       value: Knife
+      objectReference: {fileID: 0}
+    - target: {fileID: 7281081706677582537, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
+      propertyPath: m_Color.b
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7281081706677582537, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
+      propertyPath: m_Color.g
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7281081706677582537, guid: f661a0efa76a36445b60703c4aafcf9c, type: 3}
+      propertyPath: m_Color.r
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

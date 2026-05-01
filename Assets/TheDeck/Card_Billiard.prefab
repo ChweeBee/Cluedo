@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4846891430566790464, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: m_Name
-      value: CardTemplate Variant
+      value: Card_Billiard
       objectReference: {fileID: 0}
     - target: {fileID: 5311129598933705097, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: room
@@ -46,11 +46,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5617989916290936585, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 200
+      value: 160
       objectReference: {fileID: 0}
     - target: {fileID: 5617989916290936585, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 300
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 5617989916290936585, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: m_LocalPosition.x
@@ -99,6 +99,10 @@ PrefabInstance:
     - target: {fileID: 5617989916290936585, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6487765291956140127, guid: 577cf6568089ba247963a448babe6e02, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -75.6
       objectReference: {fileID: 0}
     - target: {fileID: 6917842246931043379, guid: 577cf6568089ba247963a448babe6e02, type: 3}
       propertyPath: m_text
