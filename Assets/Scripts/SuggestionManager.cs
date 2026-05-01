@@ -341,6 +341,9 @@ public void StartSuggestion(string playerName, Room room)
 
                 Debug.Log(showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name);
                 ShowCardToPlayer(shownCard, currentSuggester);
+
+                if (suggestionResultText != null)
+                    suggestionResultText.text = showingPlayer.name + " showed " + shownCard.cardName + " to " + currentSuggester.name;
                 break;
             }
 
@@ -348,7 +351,11 @@ public void StartSuggestion(string playerName, Room room)
         }
 
         if (shownCard == null)
+        {
             Debug.Log("No one could disprove " + currentSuggester.name + "'s suggestion");
+            if (suggestionResultText != null)
+                suggestionResultText.text = "No one could disprove " + currentSuggester.name + "'s suggestion.";
+        }
 
         isWaitingForSuggestionResponse = false;
 
