@@ -38,7 +38,7 @@ public class DiceRoller : MonoBehaviour
         float closestDot = -1f;
         string resultLabel = "Unknown";
 
-        // Safety check: if we can't determine, set a random result
+        // Safety check
         try
         {
             // Checking all directions

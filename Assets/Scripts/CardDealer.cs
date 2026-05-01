@@ -3,6 +3,10 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// Handles distribution, saving, and UI display of cards
+/// </summary>
+
 public class CardDealer : MonoBehaviour
 {
     public CardManager cardManager;
@@ -16,6 +20,7 @@ public class CardDealer : MonoBehaviour
     private bool hasDealt = false;
     private readonly List<Card> publicCards = new List<Card>();
 
+    //checks if any player hand is open on screen
     public bool IsHandVisible => playerHand != null && playerHand.gameObject.activeSelf;
 
     private void Start()
@@ -39,6 +44,7 @@ public class CardDealer : MonoBehaviour
         DealToAllPlayers();
     }
 
+    //sorts players based on turn order stored in save file
     CluedoPlayer[] GetPlayersInTurnOrder()
     {
         CluedoPlayer[] live = FindObjectsByType<CluedoPlayer>(FindObjectsSortMode.None);
@@ -65,6 +71,7 @@ public class CardDealer : MonoBehaviour
 
         GameSaveData save = GameBootstrap.Instance != null ? GameBootstrap.Instance.Active : null;
 
+        //restore cards from save file if game is already in progress
         if (save != null && save.cardsDealt && HasAnySavedHands(save))
         {
             RestoreSavedHands(save, allPlayers);
@@ -78,12 +85,14 @@ public class CardDealer : MonoBehaviour
         hasDealt = true;
         SyncEnvelopeFromGameState(save);
 
+        //Filters out cards already in envelope
         List<Card> remainingCards = new List<Card>();
         foreach (Card c in cardManager.allCards)
         {
             if (!cardManager.winningEnvelope.Contains(c)) remainingCards.Add(c);
         }
 
+        //shuffle remaining cards
         for (int i = 0; i < remainingCards.Count; i++)
         {
             Card temp = remainingCards[i];
@@ -92,7 +101,7 @@ public class CardDealer : MonoBehaviour
             remainingCards[randomIndex] = temp;
         }
 
-
+        //split cards among players, any extra go to public hand
         int playerCount = allPlayers.Length;
         int cardsPerPlayer = PublicHand != null ? remainingCards.Count / playerCount : remainingCards.Count;
         int totalFairCards = PublicHand != null ? cardsPerPlayer * playerCount : remainingCards.Count;
@@ -118,6 +127,7 @@ public class CardDealer : MonoBehaviour
         Debug.Log($"Dealt {totalFairCards} cards across {allPlayers.Length} players ({publicCards.Count} public).");
     }
 
+    //checks if there are any saved hands from save state
     bool HasAnySavedHands(GameSaveData save)
     {
         if (save == null || save.players == null) return false;
@@ -128,6 +138,7 @@ public class CardDealer : MonoBehaviour
         return false;
     }
 
+    //restores hands if saved
     void RestoreSavedHands(GameSaveData save, CluedoPlayer[] allPlayers)
     {
         foreach (CluedoPlayer cp in allPlayers) cp.hand.Clear();
@@ -175,6 +186,7 @@ public class CardDealer : MonoBehaviour
         }
     }
 
+    //clears public hand
     void ClearPublicHand()
     {
         publicCards.Clear();
@@ -259,6 +271,8 @@ public class CardDealer : MonoBehaviour
             if (sol.IsValid) save.envelope = sol;
         }
     }
+
+    //displays hands for specific players
     public void ShowHandByIndex(int index)
     {
         CluedoPlayer[] allPlayers = GetPlayersInTurnOrder();
@@ -305,6 +319,7 @@ public class CardDealer : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.H)) HideAllHands();
 
+        //hotkeys for toggling player hands
         if (Input.GetKeyDown(KeyCode.Alpha1)) ShowHandByIndex(0);
         if (Input.GetKeyDown(KeyCode.Alpha2)) ShowHandByIndex(1);
         if (Input.GetKeyDown(KeyCode.Alpha3)) ShowHandByIndex(2);
